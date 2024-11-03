@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 const compat = new FlatCompat();
 
 const compatConfig = compat.config({
-  extends: ["next/core-web-vitals"],
+  extends: ["next/core-web-vitals", "plugin:drizzle/recommended"],
 });
 
 export default tseslint.config(

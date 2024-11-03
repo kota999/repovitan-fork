@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BookmarkIcon,
   FrameIcon,
   LifeBuoyIcon,
   MapIcon,
@@ -28,6 +29,11 @@ const data = {
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
+    {
+      title: "Bookmarks",
+      url: "/dashboard/bookmarks",
+      icon: BookmarkIcon,
+    },
     {
       title: "Settings",
       url: "/dashboard/settings/appearance",
