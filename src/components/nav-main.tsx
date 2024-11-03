@@ -1,7 +1,8 @@
 "use client";
 
 import { ChevronRight, type LucideIcon } from "lucide-react";
-
+import Link from "next/link";
+import { useSelectedLayoutSegments } from "next/navigation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -33,6 +34,8 @@ export function NavMain({
     }[];
   }[];
 }) {
+  const segments = useSelectedLayoutSegments();
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -41,10 +44,10 @@ export function NavMain({
           <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
+                <Link href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
               {item.items?.length ? (
                 <>
@@ -58,10 +61,13 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={segments[1] === subItem.url.split("/")[3]}
+                          >
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
