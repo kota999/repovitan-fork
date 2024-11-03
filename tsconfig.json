@@ -1,16 +1,26 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
+    /* Base Options: */
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
     "resolveJsonModule": true,
+    "moduleDetection": "force",
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    /* Strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "checkJs": true,
+
+    /* Bundled projects */
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "noEmit": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "jsx": "preserve",
     "incremental": true,
     "plugins": [
@@ -18,6 +28,8 @@
         "name": "next"
       }
     ],
+
+    /* Path Aliases */
     "paths": {
       "~/*": ["./src/*"]
     }
