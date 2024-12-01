@@ -1,6 +1,5 @@
-import { createInsertSchema } from "drizzle-zod";
-import { bookmarksTable } from "~/db/schema";
+import { z } from "zod";
 
-export const createBookmarkSchema = createInsertSchema(bookmarksTable).pick({
-  url: true,
+export const createBookmarkSchema = z.object({
+  url: z.string().url(),
 });
