@@ -15,36 +15,38 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
-import { createBookmarkAction } from "./actions";
-import { createBookmarkSchema } from "./validation";
+import { createBookmarkListAction } from "./actions";
+import { createBookmarkListSchema } from "./validation";
 
-export function CreateBookmarkForm() {
+export function CreateBookmarkListForm() {
   const { form, action, handleSubmitWithAction, resetFormAndAction } =
-    useHookFormAction(createBookmarkAction, zodResolver(createBookmarkSchema), {
-      actionProps: {
-        onSuccess: ({ data }) => {
-          resetFormAndAction();
-          if (data?.successful) {
-            toast.success("Bookmark added", {
-              description: `x-rate-limit-remaining: ${data.rateLimitRemaining}`,
+    useHookFormAction(
+      createBookmarkListAction,
+      zodResolver(createBookmarkListSchema),
+      {
+        actionProps: {
+          onSuccess: ({ data }) => {
+            resetFormAndAction();
+            if (data?.successful) {
+              toast.success("Bookmark List added");
+            }
+          },
+          onError: ({ error: { validationErrors, serverError } }) => {
+            const description =
+              validationErrors?.name?._errors?.[0] ?? serverError;
+            toast.error("Failed to add bookmark list", {
+              description,
             });
-          }
+          },
         },
-        onError: ({ error: { validationErrors, serverError } }) => {
-          const description =
-            validationErrors?.url?._errors?.[0] ?? serverError;
-          toast.error("Failed to add bookmark", {
-            description,
-          });
-        },
-      },
-      formProps: {
-        mode: "onChange",
-        defaultValues: {
-          url: "",
+        formProps: {
+          mode: "onChange",
+          defaultValues: {
+            name: "",
+          },
         },
       },
-    });
+    );
   const {
     formState: { isDirty, isValid },
   } = form;
@@ -54,16 +56,17 @@ export function CreateBookmarkForm() {
       <form onSubmit={handleSubmitWithAction} className="grid gap-6">
         <FormField
           control={form.control}
-          name="url"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="url">Bookmark</FormLabel>
+              <FormLabel htmlFor="name">List</FormLabel>
               <FormControl>
                 <div className="flex max-w-lg items-center gap-2">
                   <Input
                     {...field}
-                    id="url"
-                    placeholder="Save a URL https://..."
+                    id="name"
+                    placeholder="List Name"
+                    autoComplete="off"
                   />
                   <Button
                     type="submit"

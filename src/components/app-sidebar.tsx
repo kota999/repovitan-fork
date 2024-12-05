@@ -4,10 +4,12 @@ import {
   BookmarkIcon,
   FrameIcon,
   LifeBuoyIcon,
+  ListIcon,
   MapIcon,
   PieChartIcon,
   SendIcon,
   Settings2Icon,
+  TagIcon,
 } from "lucide-react";
 import * as React from "react";
 import { NavMain } from "~/components/nav-main";
@@ -33,6 +35,16 @@ const data = {
       title: "Bookmarks",
       url: "/dashboard/bookmarks",
       icon: BookmarkIcon,
+    },
+    {
+      title: "Bookmark Lists",
+      url: "/dashboard/bookmark-lists",
+      icon: ListIcon,
+    },
+    {
+      title: "Bookmark Tags",
+      url: "/dashboard/bookmark-tags",
+      icon: TagIcon,
     },
     {
       title: "Settings",

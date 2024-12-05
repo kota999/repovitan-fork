@@ -1,5 +1,7 @@
+import { TagIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { badgeVariants } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { db } from "~/db";
 import { EditableTitle } from "./editable-title";
@@ -14,6 +16,11 @@ export default async function BookmarkPage({
     where: (bookmarks, { eq }) => eq(bookmarks.id, bookmarkId),
     with: {
       link: true,
+      bookmarksToTags: {
+        with: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -41,6 +48,18 @@ export default async function BookmarkPage({
           <Link href={bookmark.link.url} target="_blank">
             {bookmark.link.url}
           </Link>
+        </div>
+        <div className="flex gap-2">
+          <TagIcon />
+          {bookmark.bookmarksToTags.map(({ tag: { id, name } }) => (
+            <Link
+              key={id}
+              href={`/dashboard/bookmark-tags/${id}`}
+              className={badgeVariants()}
+            >
+              {name}
+            </Link>
+          ))}
         </div>
       </div>
       <Separator />

@@ -15,6 +15,11 @@ export default async function Page() {
     orderBy: (bookmarksTable, { desc }) => [desc(bookmarksTable.updatedAt)],
     with: {
       link: true,
+      bookmarksToTags: {
+        with: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -22,14 +27,18 @@ export default async function Page() {
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <CreateBookmarkForm />
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:flex 2xl:flex-wrap">
-        {bookmarks.map(({ id, title, link: { imageUrl } }) => (
+        {bookmarks.map(({ id, title, link: { imageUrl }, bookmarksToTags }) => (
           <li key={id}>
             <MinimalCard className="2xl:w-96">
               <MinimalCardImage src={imageUrl ?? ""} alt={title ?? ""} />
               <MinimalCardTitle className="line-clamp-3">
                 <Link href={`/dashboard/bookmarks/${id}`}>{title}</Link>
               </MinimalCardTitle>
-              <MinimalCardDescription></MinimalCardDescription>
+              <MinimalCardDescription className="flex gap-1">
+                {bookmarksToTags.map(({ tag: { id, name } }) => (
+                  <span key={id}>#{name}</span>
+                ))}
+              </MinimalCardDescription>
             </MinimalCard>
           </li>
         ))}
