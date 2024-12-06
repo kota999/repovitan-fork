@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { TagIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,12 +6,18 @@ import { badgeVariants } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { db } from "~/db";
 import { EditableTitle } from "./editable-title";
+import { MultiSelectTags } from "./multi-select-tags";
 
 export default async function BookmarkPage({
   params,
 }: {
   params: Promise<{ bookmarkId: string }>;
 }) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
   const { bookmarkId } = await params;
   const bookmark = await db.query.bookmarksTable.findFirst({
     where: (bookmarks, { eq }) => eq(bookmarks.id, bookmarkId),
@@ -25,8 +32,12 @@ export default async function BookmarkPage({
   });
 
   if (!bookmark) {
-    return notFound();
+    notFound();
   }
+
+  const bookmarkTags = await db.query.bookmarkTagsTable.findMany({
+    where: (bookmarkTags, { eq }) => eq(bookmarkTags.userId, userId),
+  });
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -60,6 +71,16 @@ export default async function BookmarkPage({
               {name}
             </Link>
           ))}
+        </div>
+        <div>
+          <MultiSelectTags
+            bookmarkId={bookmarkId}
+            tags={bookmark.bookmarksToTags.map(({ tag: { id, name } }) => ({
+              id,
+              name,
+            }))}
+            bookmarkTags={bookmarkTags}
+          />
         </div>
       </div>
       <Separator />

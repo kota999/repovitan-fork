@@ -37,7 +37,7 @@ export default async function BookmarkListPage({
   });
 
   if (!bookmarkList) {
-    return notFound();
+    notFound();
   }
 
   return (
