@@ -9,3 +9,6 @@ export const updateTitleSchema = z.object({
 export const updateTagsSchema = z.object({
   tagNames: z.array(z.string()),
 });
+
+export const bindGithubUrlSchemas: [bookmarkId: z.ZodString, url: z.ZodString] =
+  [z.string().min(1), z.string().url()];

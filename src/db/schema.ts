@@ -243,3 +243,90 @@ export const bookmarksToListsRelations = relations(
     }),
   }),
 );
+
+export const githubReposTable = sqliteTable(
+  "github_repos",
+  {
+    id: integer().primaryKey(),
+    owner: text().notNull(),
+    name: text().notNull(),
+    fullName: text().notNull(),
+    htmlUrl: text().notNull(),
+    description: text(),
+    stargazersCount: integer().notNull(),
+    pushedAt: integer({ mode: "timestamp" }),
+    crawledAt: integer({ mode: "timestamp" }),
+  },
+  (t) => {
+    return {
+      fullNameIdx: index("github_repos_full_name_idx").on(t.name),
+      stargazersCountIdx: index("github_repos_stargazers_count_idx").on(t.name),
+    };
+  },
+);
+
+export const nodejsProjectsTable = sqliteTable(
+  "nodejs_projects",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("njp").toString()),
+    repoId: integer()
+      .notNull()
+      .references(() => githubReposTable.id, {
+        onDelete: "cascade",
+      }),
+    path: text().notNull(),
+    htmlUrl: text().notNull(),
+  },
+  (t) => ({
+    unq: unique().on(t.repoId, t.path),
+    repoIdIdx: index("nodejs_projects_repo_id_idx").on(t.repoId),
+  }),
+);
+
+export const nodeProjectsRelations = relations(
+  nodejsProjectsTable,
+  ({ one }) => ({
+    repo: one(githubReposTable, {
+      fields: [nodejsProjectsTable.repoId],
+      references: [githubReposTable.id],
+    }),
+  }),
+);
+
+export const npmPackagesTable = sqliteTable(
+  "npm_packages",
+  {
+    id: text().primaryKey(),
+    name: text().notNull(),
+  },
+  (t) => ({
+    nameIdx: index("npm_packages_name_idx").on(t.name),
+  }),
+);
+
+export const nodejsProjectsToNpmPackages = sqliteTable(
+  "nodejs_projects_to_node_deps",
+  {
+    projectId: text()
+      .notNull()
+      .references(() => nodejsProjectsTable.id, {
+        onDelete: "cascade",
+      }),
+    packageId: text()
+      .notNull()
+      .references(() => npmPackagesTable.id, {
+        onDelete: "cascade",
+      }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.projectId, t.packageId] }),
+    projectIdIdx: index("nodejs_projects_to_npm_packages_project_id_idx").on(
+      t.projectId,
+    ),
+    packageIdIdx: index("nodejs_projects_to_npm_packages_package_id_idx").on(
+      t.packageId,
+    ),
+  }),
+);

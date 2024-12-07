@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { badgeVariants } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
 import { db } from "~/db";
+import { CreateNodejsProjectButton } from "./create-nodejs-project-button";
 import { EditableTitle } from "./editable-title";
 import { MultiSelectTags } from "./multi-select-tags";
 
@@ -80,6 +81,12 @@ export default async function BookmarkPage({
               name,
             }))}
             bookmarkTags={bookmarkTags}
+          />
+        </div>
+        <div>
+          <CreateNodejsProjectButton
+            bookmarkId={bookmarkId}
+            url={bookmark.link.url}
           />
         </div>
       </div>
