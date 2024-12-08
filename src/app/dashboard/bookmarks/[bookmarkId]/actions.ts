@@ -236,11 +236,11 @@ export const createNodejsProjectAction = authActionClient
           packageId: slugify(name),
         })),
       );
-
-      revalidatePath("/");
-
-      return {
-        successful: true,
-      };
     });
+
+    revalidatePath("/");
+
+    return {
+      successful: true,
+    };
   });
