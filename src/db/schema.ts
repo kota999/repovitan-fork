@@ -8,6 +8,7 @@ import {
   unique,
   type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
+import { createInsertSchema } from "drizzle-zod";
 import { typeid } from "typeid-js";
 
 export const enum BookmarkTypes {
@@ -330,3 +331,40 @@ export const nodejsProjectsToNpmPackages = sqliteTable(
     ),
   }),
 );
+
+export const tasks = sqliteTable("tasks", {
+  id: text({ length: 30 })
+    .primaryKey()
+    .$defaultFn(() => typeid("tsk").toString()),
+  code: text({ length: 128 }).notNull().unique(),
+  title: text({ length: 128 }),
+  status: text({
+    length: 30,
+    enum: ["todo", "in-progress", "done", "canceled"],
+  })
+    .notNull()
+    .default("todo"),
+  label: text({
+    length: 30,
+    enum: ["bug", "feature", "enhancement", "documentation"],
+  })
+    .notNull()
+    .default("bug"),
+  priority: text({
+    length: 30,
+    enum: ["low", "medium", "high"],
+  })
+    .notNull()
+    .default("low"),
+  archived: integer({ mode: "boolean" }).notNull().default(false),
+  createdAt: integer({ mode: "timestamp" })
+    .notNull()
+    .default(sql`(cast(unixepoch() as int))`),
+  updatedAt: integer({ mode: "timestamp" })
+    .notNull()
+    .default(sql`(cast(unixepoch() as int))`)
+    .$onUpdate(() => new Date()),
+});
+
+export type Task = typeof tasks.$inferSelect;
+export const insertTaskSchema = createInsertSchema(tasks);

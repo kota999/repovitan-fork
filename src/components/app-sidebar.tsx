@@ -4,8 +4,10 @@ import {
   BookmarkIcon,
   FrameIcon,
   LifeBuoyIcon,
+  ListChecksIcon,
   ListIcon,
   MapIcon,
+  PackageIcon,
   PieChartIcon,
   SendIcon,
   Settings2Icon,
@@ -45,6 +47,16 @@ const data = {
       title: "Bookmark Tags",
       url: "/dashboard/bookmark-tags",
       icon: TagIcon,
+    },
+    {
+      title: "NPM Packages",
+      url: "/dashboard/npm-packages",
+      icon: PackageIcon,
+    },
+    {
+      title: "Data Table",
+      url: "/dashboard/data-table",
+      icon: ListChecksIcon,
     },
     {
       title: "Settings",
