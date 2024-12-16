@@ -288,11 +288,12 @@ export const nodejsProjectsTable = sqliteTable(
 
 export const nodeProjectsRelations = relations(
   nodejsProjectsTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     repo: one(githubReposTable, {
       fields: [nodejsProjectsTable.repoId],
       references: [githubReposTable.id],
     }),
+    projectsToPackages: many(nodejsProjectsToNpmPackagesTable),
   }),
 );
 
@@ -307,8 +308,12 @@ export const npmPackagesTable = sqliteTable(
   }),
 );
 
-export const nodejsProjectsToNpmPackages = sqliteTable(
-  "nodejs_projects_to_node_deps",
+export const npmPackagesRelations = relations(npmPackagesTable, ({ many }) => ({
+  projectsToPackages: many(nodejsProjectsToNpmPackagesTable),
+}));
+
+export const nodejsProjectsToNpmPackagesTable = sqliteTable(
+  "nodejs_projects_to_npm_packages",
   {
     projectId: text()
       .notNull()
@@ -329,6 +334,20 @@ export const nodejsProjectsToNpmPackages = sqliteTable(
     packageIdIdx: index("nodejs_projects_to_npm_packages_package_id_idx").on(
       t.packageId,
     ),
+  }),
+);
+
+export const nodejsProjectsToNpmPackagesRelations = relations(
+  nodejsProjectsToNpmPackagesTable,
+  ({ one }) => ({
+    project: one(nodejsProjectsTable, {
+      fields: [nodejsProjectsToNpmPackagesTable.projectId],
+      references: [nodejsProjectsTable.id],
+    }),
+    npmPackage: one(npmPackagesTable, {
+      fields: [nodejsProjectsToNpmPackagesTable.packageId],
+      references: [npmPackagesTable.id],
+    }),
   }),
 );
 

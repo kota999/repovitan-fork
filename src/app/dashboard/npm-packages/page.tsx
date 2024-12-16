@@ -1,45 +1,40 @@
-import { and, count, desc, eq, like, type SQL } from "drizzle-orm";
-import { db } from "~/db";
-import { nodejsProjectsToNpmPackages, npmPackagesTable } from "~/db/schema";
+import * as React from "react";
+import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton";
+import type { SearchParams } from "~/types";
+import { NpmPackagesTable } from "./_components/npm-packages-table";
+import { getNpmPackages } from "./_lib/queries";
+import { searchParamsCache } from "./_lib/validations";
 
 export const dynamic = "force-dynamic";
 
 export default async function NpmPackagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<SearchParams>;
 }) {
-  const where: SQL[] = [];
-  const { q } = await searchParams;
-  if (q) {
-    where.push(like(npmPackagesTable.name, `%${q}%`));
-  }
+  const search = await searchParamsCache.parse(searchParams);
 
-  const npmPackages = await db
-    .select({
-      id: nodejsProjectsToNpmPackages.packageId,
-      name: npmPackagesTable.name,
-      count: count(),
-    })
-    .from(nodejsProjectsToNpmPackages)
-    .innerJoin(
-      npmPackagesTable,
-      eq(nodejsProjectsToNpmPackages.packageId, npmPackagesTable.id),
-    )
-    .where(and(...where))
-    .groupBy(nodejsProjectsToNpmPackages.packageId)
-    .orderBy(desc(count()))
-    .limit(10);
+  const promises = Promise.all([
+    getNpmPackages({
+      ...search,
+    }),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <ul>
-        {npmPackages.map(({ id, name, count }) => (
-          <li key={id}>
-            {name} ({count})
-          </li>
-        ))}
-      </ul>
+      <React.Suspense
+        fallback={
+          <DataTableSkeleton
+            columnCount={6}
+            searchableColumnCount={1}
+            filterableColumnCount={2}
+            cellWidths={["10rem", "40rem", "12rem", "12rem", "8rem", "8rem"]}
+            shrinkZero
+          />
+        }
+      >
+        <NpmPackagesTable promises={promises} />
+      </React.Suspense>
     </div>
   );
 }
