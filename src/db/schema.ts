@@ -8,6 +8,7 @@ import {
   unique,
   type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
+import { createInsertSchema } from "drizzle-zod";
 import { typeid } from "typeid-js";
 
 export const enum BookmarkTypes {
@@ -287,11 +288,12 @@ export const nodejsProjectsTable = sqliteTable(
 
 export const nodeProjectsRelations = relations(
   nodejsProjectsTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     repo: one(githubReposTable, {
       fields: [nodejsProjectsTable.repoId],
       references: [githubReposTable.id],
     }),
+    projectsToPackages: many(nodejsProjectsToNpmPackagesTable),
   }),
 );
 
@@ -306,8 +308,12 @@ export const npmPackagesTable = sqliteTable(
   }),
 );
 
-export const nodejsProjectsToNpmPackages = sqliteTable(
-  "nodejs_projects_to_node_deps",
+export const npmPackagesRelations = relations(npmPackagesTable, ({ many }) => ({
+  projectsToPackages: many(nodejsProjectsToNpmPackagesTable),
+}));
+
+export const nodejsProjectsToNpmPackagesTable = sqliteTable(
+  "nodejs_projects_to_npm_packages",
   {
     projectId: text()
       .notNull()
@@ -330,3 +336,54 @@ export const nodejsProjectsToNpmPackages = sqliteTable(
     ),
   }),
 );
+
+export const nodejsProjectsToNpmPackagesRelations = relations(
+  nodejsProjectsToNpmPackagesTable,
+  ({ one }) => ({
+    project: one(nodejsProjectsTable, {
+      fields: [nodejsProjectsToNpmPackagesTable.projectId],
+      references: [nodejsProjectsTable.id],
+    }),
+    npmPackage: one(npmPackagesTable, {
+      fields: [nodejsProjectsToNpmPackagesTable.packageId],
+      references: [npmPackagesTable.id],
+    }),
+  }),
+);
+
+export const tasks = sqliteTable("tasks", {
+  id: text({ length: 30 })
+    .primaryKey()
+    .$defaultFn(() => typeid("tsk").toString()),
+  code: text({ length: 128 }).notNull().unique(),
+  title: text({ length: 128 }),
+  status: text({
+    length: 30,
+    enum: ["todo", "in-progress", "done", "canceled"],
+  })
+    .notNull()
+    .default("todo"),
+  label: text({
+    length: 30,
+    enum: ["bug", "feature", "enhancement", "documentation"],
+  })
+    .notNull()
+    .default("bug"),
+  priority: text({
+    length: 30,
+    enum: ["low", "medium", "high"],
+  })
+    .notNull()
+    .default("low"),
+  archived: integer({ mode: "boolean" }).notNull().default(false),
+  createdAt: integer({ mode: "timestamp" })
+    .notNull()
+    .default(sql`(cast(unixepoch() as int))`),
+  updatedAt: integer({ mode: "timestamp" })
+    .notNull()
+    .default(sql`(cast(unixepoch() as int))`)
+    .$onUpdate(() => new Date()),
+});
+
+export type Task = typeof tasks.$inferSelect;
+export const insertTaskSchema = createInsertSchema(tasks);

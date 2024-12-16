@@ -14,7 +14,7 @@ import {
   bookmarksToTagsTable,
   githubReposTable,
   nodejsProjectsTable,
-  nodejsProjectsToNpmPackages,
+  nodejsProjectsToNpmPackagesTable,
   npmPackagesTable,
 } from "~/db/schema";
 import { actionClient, authActionClient } from "~/lib/safe-action";
@@ -206,6 +206,10 @@ export const createNodejsProjectAction = authActionClient
     });
     const npmPackages = Object.keys({ ...dependencies, ...devDependencies });
 
+    if (!npmPackages.includes("next")) {
+      throw new Error("Next.js project required");
+    }
+
     await db.transaction(async (tx) => {
       await tx.insert(githubReposTable).values({
         id: repoId,
@@ -230,7 +234,7 @@ export const createNodejsProjectAction = authActionClient
         .insert(npmPackagesTable)
         .values(npmPackages.map((name) => ({ id: slugify(name), name })))
         .onConflictDoNothing();
-      await tx.insert(nodejsProjectsToNpmPackages).values(
+      await tx.insert(nodejsProjectsToNpmPackagesTable).values(
         npmPackages.map((name) => ({
           projectId,
           packageId: slugify(name),

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import localFont from "next/font/local";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { TailwindIndicator } from "~/components/tailwind-indicator";
 import { Toaster } from "~/components/ui/sonner";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -31,8 +34,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute="class" disableTransitionOnChange>
-          {children}
+          <TooltipProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TooltipProvider>
           <Toaster richColors />
+          <TailwindIndicator />
         </ThemeProvider>
       </body>
     </html>
