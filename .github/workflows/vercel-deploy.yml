@@ -20,11 +20,14 @@ jobs:
         with:
           node-version: '22'        # nodeのバージョン20を指定
 
+      - name: Install pnpm
+        run: npm install -g pnpm           # 依存関係をインストール
+
       - name: Install dependencies
-        run: npm install            # 依存関係をインストール
+        run: pnpm install            # 依存関係をインストール
 
       - name: Build Next.js project
-        run: npm run build          # ビルドする
+        run: pnpm run build          # ビルドする
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25 # Vercelにデプロイする。
