@@ -2,6 +2,7 @@
 
 import {
   BookmarkIcon,
+  AlbumIcon,
   FrameIcon,
   LifeBuoyIcon,
   ListChecksIcon,
@@ -37,6 +38,11 @@ const data = {
       title: "Bookmarks",
       url: "/dashboard/bookmarks",
       icon: BookmarkIcon,
+    },
+    {
+      title: "Bookmark Topics",
+      url: "/dashboard/bookmark-topics",
+      icon: AlbumIcon,
     },
     {
       title: "Bookmark Lists",

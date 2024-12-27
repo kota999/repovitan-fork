@@ -18,6 +18,7 @@ export const enum BookmarkTypes {
   UNKNOWN = "unknown",
 }
 
+// TODO: Clerkのユーザー名/ユーザーIDを手動登録しておかないと動かない
 export const usersTable = sqliteTable("users", {
   id: text().primaryKey(),
   username: text().notNull(),
@@ -168,6 +169,39 @@ export const bookmarksToTagsRelations = relations(
   }),
 );
 
+export const bookmarkTopicsTable = sqliteTable(
+  "bookmark_topics",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("bml").toString()),
+    name: text().notNull(),
+    icon: text().notNull(),
+    userId: text()
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    createdAt: integer({ mode: "timestamp" })
+      .notNull()
+      .default(sql`(cast(unixepoch() as int))`),
+    updatedAt: integer({ mode: "timestamp" })
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => ({
+    userIdIdx: index("bookmark_topics_userId_idx").on(t.userId),
+  }),
+);
+
+export const bookmarkTopicsRelations = relations(
+  bookmarkTopicsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [bookmarkTopicsTable.userId],
+      references: [usersTable.id],
+    }),
+  }),
+);
+
 export const bookmarkListsTable = sqliteTable(
   "bookmark_lists",
   {
@@ -245,6 +279,7 @@ export const bookmarksToListsRelations = relations(
   }),
 );
 
+// TODO: ブックマークリンクのcrawlStatusが意味ありげだが更新してなさそう
 export const githubReposTable = sqliteTable(
   "github_repos",
   {
