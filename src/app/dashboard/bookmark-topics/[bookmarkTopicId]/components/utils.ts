@@ -1,8 +1,8 @@
 import type { Active, DataRef, Over } from "@dnd-kit/core";
-import type { ColumnDragData } from "./BoardColumn";
+import type { QuadrantDragData } from "./BoardQuadrant";
 import type { ItemDragData } from "./ItemCard";
 
-type DraggableData = ColumnDragData | ItemDragData;
+type DraggableData = QuadrantDragData | ItemDragData;
 
 export function hasDraggableData<T extends Active | Over>(
   entry: T | null | undefined,
@@ -15,7 +15,7 @@ export function hasDraggableData<T extends Active | Over>(
 
   const data = entry.data.current;
 
-  if (data?.type === "Column" || data?.type === "Item") {
+  if (data?.type === "Quadrant" || data?.type === "Item") {
     return true;
   }
 

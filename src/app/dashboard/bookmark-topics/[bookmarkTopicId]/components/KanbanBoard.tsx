@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { BoardColumn, BoardContainer } from "./BoardColumn";
+import { BoardQuadrant, BoardContainer } from "./BoardQuadrant";
 import {
   DndContext,
   type DragEndEvent,
@@ -20,28 +20,41 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
 import { type Item, ItemCard } from "./ItemCard";
-import type { Column } from "./BoardColumn";
+import type { Quadrant } from "./BoardQuadrant";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
 
 const defaultDndId = "kanban";
 
+const QuadrantArrangementLiteral = {
+  VERTICAL: "vertical",
+  HORIZONTAL: "horizontal",
+  GRID2x2: "grid2x2",
+} as const;
+type QuadrantArrangement =
+  (typeof QuadrantArrangementLiteral)[keyof typeof QuadrantArrangementLiteral];
+
 export function KanbanBoard({
-  cols,
+  initialQuadrants,
   initialItems,
+  quadrantArrangement,
   id = defaultDndId,
 }: {
-  cols: Column[];
+  initialQuadrants: Quadrant[];
   initialItems: Item[];
+  quadrantArrangement: QuadrantArrangement;
   id?: string;
 }) {
-  const [columns, setColumns] = useState<Column[]>(cols);
-  const pickedUpItemColumn = useRef<string | null>(null);
-  const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+  const [quadrants, setQuadrants] = useState<Quadrant[]>(initialQuadrants);
+  const pickedUpItemQuadrant = useRef<string | null>(null);
+  const quadrantsId = useMemo(
+    () => quadrants.map((quadrant) => quadrant.id),
+    [quadrants],
+  );
 
   const [items, setItems] = useState<Item[]>(initialItems);
 
-  const [activeColumn, setActiveColumn] = useState<Column | null>(null);
+  const [activeQuadrant, setActiveQuadrant] = useState<Quadrant | null>(null);
 
   const [activeItem, setActiveItem] = useState<Item | null>(null);
 
@@ -59,111 +72,142 @@ export function KanbanBoard({
     setMounted(true);
   }, []);
 
-  function getDraggingItemData(itemId: UniqueIdentifier, columnId: string) {
-    const itemsInColumn = items.filter((item) => item.columnId === columnId);
-    const itemPosition = itemsInColumn.findIndex((item) => item.id === itemId);
-    const column = columns.find((col) => col.id === columnId);
+  function getDraggingItemData(itemId: UniqueIdentifier, quadrantId: string) {
+    const itemsInQuadrant = items.filter(
+      (item) => item.quadrantId === quadrantId,
+    );
+    const itemPosition = itemsInQuadrant.findIndex(
+      (item) => item.id === itemId,
+    );
+    const quadrant = quadrants.find((quadrant) => quadrant.id === quadrantId);
     return {
-      itemsInColumn,
+      itemsInQuadrant: itemsInQuadrant,
       itemPosition,
-      column,
+      quadrant: quadrant,
     };
   }
 
   const announcements: Announcements = {
     onDragStart({ active }) {
       if (!hasDraggableData(active)) return;
-      if (active.data.current?.type === "Column") {
-        const startColumnIdx = columnsId.findIndex((id) => id === active.id);
-        const startColumn = columns[startColumnIdx];
-        return `Picked up Column ${startColumn?.title} at position: ${
-          startColumnIdx + 1
-        } of ${columnsId.length}`;
-      } else if (active.data.current?.type === "Item") {
-        pickedUpItemColumn.current = active.data.current.item.columnId;
-        const { itemsInColumn, itemPosition, column } = getDraggingItemData(
-          active.id,
-          pickedUpItemColumn.current,
+      if (active.data.current?.type === "Quadrant") {
+        const startQuadrantIdx = quadrantsId.findIndex(
+          (id) => id === active.id,
         );
+        const startQuadrant = quadrants[startQuadrantIdx];
+        return `Picked up Quadrant ${startQuadrant?.title} at position: ${
+          startQuadrantIdx + 1
+        } of ${quadrantsId.length}`;
+      } else if (active.data.current?.type === "Item") {
+        pickedUpItemQuadrant.current = active.data.current.item.quadrantId;
+        const {
+          itemsInQuadrant: itemsInQuadrant,
+          itemPosition,
+          quadrant: quadrant,
+        } = getDraggingItemData(active.id, pickedUpItemQuadrant.current);
         return `Picked up Item ${
           active.data.current.item.content
         } at position: ${itemPosition + 1} of ${
-          itemsInColumn.length
-        } in column ${column?.title}`;
+          itemsInQuadrant.length
+        } in quadrant ${quadrant?.title}`;
       }
     },
     onDragOver({ active, over }) {
       if (!hasDraggableData(active) || !hasDraggableData(over)) return;
 
       if (
-        active.data.current?.type === "Column" &&
-        over.data.current?.type === "Column"
+        active.data.current?.type === "Quadrant" &&
+        over.data.current?.type === "Quadrant"
       ) {
-        const overColumnIdx = columnsId.findIndex((id) => id === over.id);
-        return `Column ${active.data.current.column.title} was moved over ${
-          over.data.current.column.title
-        } at position ${overColumnIdx + 1} of ${columnsId.length}`;
+        const overQuadrantIdx = quadrantsId.findIndex((id) => id === over.id);
+        return `Quadrant ${active.data.current.quadrant.title} was moved over ${
+          over.data.current.quadrant.title
+        } at position ${overQuadrantIdx + 1} of ${quadrantsId.length}`;
       } else if (
         active.data.current?.type === "Item" &&
         over.data.current?.type === "Item"
       ) {
-        const { itemsInColumn, itemPosition, column } = getDraggingItemData(
-          over.id,
-          over.data.current.item.columnId,
-        );
-        if (over.data.current.item.columnId !== pickedUpItemColumn.current) {
+        const {
+          itemsInQuadrant: itemsInQuadrant,
+          itemPosition,
+          quadrant,
+        } = getDraggingItemData(over.id, over.data.current.item.quadrantId);
+        if (
+          over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
+        ) {
           return `Item ${
             active.data.current.item.content
-          } was moved over column ${column?.title} in position ${
+          } was moved over quadrant ${quadrant?.title} in position ${
             itemPosition + 1
-          } of ${itemsInColumn.length}`;
+          } of ${itemsInQuadrant.length}`;
         }
         return `Item was moved over position ${itemPosition + 1} of ${
-          itemsInColumn.length
-        } in column ${column?.title}`;
+          itemsInQuadrant.length
+        } in quadrant ${quadrant?.title}`;
       }
     },
     onDragEnd({ active, over }) {
       if (!hasDraggableData(active) || !hasDraggableData(over)) {
-        pickedUpItemColumn.current = null;
+        pickedUpItemQuadrant.current = null;
         return;
       }
       if (
-        active.data.current?.type === "Column" &&
-        over.data.current?.type === "Column"
+        active.data.current?.type === "Quadrant" &&
+        over.data.current?.type === "Quadrant"
       ) {
-        const overColumnPosition = columnsId.findIndex((id) => id === over.id);
+        const overQuadrantPosition = quadrantsId.findIndex(
+          (id) => id === over.id,
+        );
 
-        return `Column ${
-          active.data.current.column.title
-        } was dropped into position ${overColumnPosition + 1} of ${
-          columnsId.length
+        return `Quadrant ${
+          active.data.current.quadrant.title
+        } was dropped into position ${overQuadrantPosition + 1} of ${
+          quadrantsId.length
         }`;
       } else if (
         active.data.current?.type === "Item" &&
         over.data.current?.type === "Item"
       ) {
-        const { itemsInColumn, itemPosition, column } = getDraggingItemData(
-          over.id,
-          over.data.current.item.columnId,
-        );
-        if (over.data.current.item.columnId !== pickedUpItemColumn.current) {
-          return `Item was dropped into column ${column?.title} in position ${
+        const {
+          itemsInQuadrant: itemsInQuadrant,
+          itemPosition,
+          quadrant,
+        } = getDraggingItemData(over.id, over.data.current.item.quadrantId);
+        if (
+          over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
+        ) {
+          return `Item was dropped into quadrant ${quadrant?.title} in position ${
             itemPosition + 1
-          } of ${itemsInColumn.length}`;
+          } of ${itemsInQuadrant.length}`;
         }
         return `Item was dropped into position ${itemPosition + 1} of ${
-          itemsInColumn.length
-        } in column ${column?.title}`;
+          itemsInQuadrant.length
+        } in quadrant ${quadrant?.title}`;
       }
-      pickedUpItemColumn.current = null;
+      pickedUpItemQuadrant.current = null;
     },
     onDragCancel({ active }) {
-      pickedUpItemColumn.current = null;
+      pickedUpItemQuadrant.current = null;
       if (!hasDraggableData(active)) return;
       return `Dragging ${active.data.current?.type} cancelled.`;
     },
   };
+  const boardQuadrantArrangement =
+    quadrantArrangement === QuadrantArrangementLiteral.HORIZONTAL
+      ? "flex flex-row"
+      : quadrantArrangement === QuadrantArrangementLiteral.VERTICAL
+        ? "flex flex-col w-full h-full"
+        : quadrantArrangement === QuadrantArrangementLiteral.GRID2x2
+          ? "grid grid-cols-2 w-full h-full"
+          : "flex flex-row";
+  const quadrantGridRatio =
+    quadrantArrangement === QuadrantArrangementLiteral.HORIZONTAL
+      ? "hfull_w1/4"
+      : quadrantArrangement === QuadrantArrangementLiteral.VERTICAL
+        ? "h1/2_wfull"
+        : quadrantArrangement === QuadrantArrangementLiteral.GRID2x2
+          ? "h1/2_w1/2"
+          : "hfull_w1/4";
 
   return (
     <DndContext
@@ -177,14 +221,17 @@ export function KanbanBoard({
       id={id}
     >
       <BoardContainer>
-        <SortableContext items={columnsId}>
-          {columns.map((col) => (
-            <BoardColumn
-              key={col.id}
-              column={col}
-              items={items.filter((item) => item.columnId === col.id)}
-            />
-          ))}
+        <SortableContext items={quadrantsId}>
+          <div className={`${boardQuadrantArrangement} gap-2`}>
+            {quadrants.map((quadrant) => (
+              <BoardQuadrant
+                key={quadrant.id}
+                quadrant={quadrant}
+                quadrantGridRatio={quadrantGridRatio}
+                items={items.filter((item) => item.quadrantId === quadrant.id)}
+              />
+            ))}
+          </div>
         </SortableContext>
       </BoardContainer>
 
@@ -192,12 +239,12 @@ export function KanbanBoard({
         "document" in window &&
         createPortal(
           <DragOverlay>
-            {activeColumn && (
-              <BoardColumn
+            {activeQuadrant && (
+              <BoardQuadrant
                 isOverlay
-                column={activeColumn}
+                quadrant={activeQuadrant}
                 items={items.filter(
-                  (item) => item.columnId === activeColumn.id,
+                  (item) => item.quadrantId === activeQuadrant.id,
                 )}
               />
             )}
@@ -211,8 +258,8 @@ export function KanbanBoard({
   function onDragStart(event: DragStartEvent) {
     if (!hasDraggableData(event.active)) return;
     const data = event.active.data.current;
-    if (data?.type === "Column") {
-      setActiveColumn(data.column);
+    if (data?.type === "Quadrant") {
+      setActiveQuadrant(data.quadrant);
       return;
     }
 
@@ -223,7 +270,7 @@ export function KanbanBoard({
   }
 
   function onDragEnd(event: DragEndEvent) {
-    setActiveColumn(null);
+    setActiveQuadrant(null);
     setActiveItem(null);
 
     const { active, over } = event;
@@ -238,15 +285,19 @@ export function KanbanBoard({
 
     if (activeId === overId) return;
 
-    const isActiveAColumn = activeData?.type === "Column";
-    if (!isActiveAColumn) return;
+    const isActiveAQuadrant = activeData?.type === "Quadrant";
+    if (!isActiveAQuadrant) return;
 
-    setColumns((columns) => {
-      const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
+    setQuadrants((quadrants) => {
+      const activeQuadrantIndex = quadrants.findIndex(
+        (quadrant) => quadrant.id === activeId,
+      );
 
-      const overColumnIndex = columns.findIndex((col) => col.id === overId);
+      const overQuadrantIndex = quadrants.findIndex(
+        (quadrant) => quadrant.id === overId,
+      );
 
-      return arrayMove(columns, activeColumnIndex, overColumnIndex);
+      return arrayMove(quadrants, activeQuadrantIndex, overQuadrantIndex);
     });
   }
 
@@ -279,9 +330,9 @@ export function KanbanBoard({
         if (
           activeItem &&
           overItem &&
-          activeItem.columnId !== overItem.columnId
+          activeItem.quadrantId !== overItem.quadrantId
         ) {
-          activeItem.columnId = overItem.columnId;
+          activeItem.quadrantId = overItem.quadrantId;
           return arrayMove(items, activeIndex, overIndex - 1);
         }
 
@@ -289,15 +340,15 @@ export function KanbanBoard({
       });
     }
 
-    const isOverAColumn = overData?.type === "Column";
+    const isOverAQuadrant = overData?.type === "Quadrant";
 
-    // Im dropping a Item over a column
-    if (isActiveAItem && isOverAColumn) {
+    // Im dropping a Item over a quadrant
+    if (isActiveAItem && isOverAQuadrant) {
       setItems((items) => {
         const activeIndex = items.findIndex((t) => t.id === activeId);
         const activeItem = items[activeIndex];
         if (activeItem) {
-          activeItem.columnId = overId as string;
+          activeItem.quadrantId = overId as string;
           return arrayMove(items, activeIndex, activeIndex);
         }
         return items;

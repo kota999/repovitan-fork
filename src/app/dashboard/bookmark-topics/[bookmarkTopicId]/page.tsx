@@ -1,105 +1,67 @@
 import { notFound } from "next/navigation";
-import { db } from "~/db";
 import { KanbanBoard } from "./components/KanbanBoard";
-import type { Column } from "./components/BoardColumn";
+import type { Quadrant } from "./components/BoardQuadrant";
 import type { Item } from "./components/ItemCard";
+import { getBookmarkTopic } from "~/db/query";
 
-const defaultCols = [
+//const initialQuadrantArrangement = "horizontal"
+//const initialQuadrantArrangement = "vertical"
+const initialQuadrantArrangement = "grid2x2";
+
+const initialQuadrants = [
   {
-    id: "todo" as const,
+    id: "q1",
     title: "Todo",
   },
   {
-    id: "in-progress" as const,
+    id: "q2",
     title: "In progress",
   },
   {
-    id: "done" as const,
+    id: "q3",
     title: "Done",
   },
   {
-    id: "freeze" as const,
+    id: "q4",
     title: "Freeze",
   },
-] satisfies Column[];
+] satisfies Quadrant[];
 
 const initialItems: Item[] = [
   {
     id: "item1",
-    columnId: "done",
+    quadrantId: "q3",
     content: "Project initiation and planning",
     badge: "TASK",
   },
   {
     id: "item2",
-    columnId: "done",
+    quadrantId: "q3",
     content: "Gather requirements from stakeholders",
     badge: "TASK",
   },
   {
     id: "item3",
-    columnId: "done",
+    quadrantId: "q3",
     content: "Create wireframes and mockups",
     badge: "TASK",
   },
   {
     id: "item4",
-    columnId: "in-progress",
+    quadrantId: "q2",
     content: "Develop homepage layout",
     badge: "TASK",
   },
   {
     id: "item5",
-    columnId: "in-progress",
+    quadrantId: "q2",
     content: "Design color scheme and typography",
     badge: "TASK",
   },
   {
     id: "item6",
-    columnId: "todo",
+    quadrantId: "q1",
     content: "Implement user authentication",
-    badge: "TASK",
-  },
-  {
-    id: "item7",
-    columnId: "todo",
-    content: "Build contact us page",
-    badge: "TASK",
-  },
-  {
-    id: "item8",
-    columnId: "todo",
-    content: "Create product catalog",
-    badge: "TASK",
-  },
-  {
-    id: "item9",
-    columnId: "todo",
-    content: "Develop about us page",
-    badge: "TASK",
-  },
-  {
-    id: "item10",
-    columnId: "todo",
-    content: "Optimize website for mobile devices",
-    badge: "TASK",
-  },
-  {
-    id: "item11",
-    columnId: "todo",
-    content: "Integrate payment gateway",
-    badge: "TASK",
-  },
-  {
-    id: "item12",
-    columnId: "todo",
-    content: "Perform testing and bug fixing",
-    badge: "TASK",
-  },
-  {
-    id: "item13",
-    columnId: "todo",
-    content: "Launch website and deploy to server",
     badge: "TASK",
   },
 ];
@@ -110,10 +72,7 @@ export default async function BookmarkTopicPage({
   params: Promise<{ bookmarkTopicId: string }>;
 }) {
   const { bookmarkTopicId } = await params;
-  const bookmarkTopic = await db.query.bookmarkTopicsTable.findFirst({
-    where: (bookmarkTopicsTable, { eq }) =>
-      eq(bookmarkTopicsTable.id, bookmarkTopicId),
-  });
+  const bookmarkTopic = await getBookmarkTopic(bookmarkTopicId);
 
   if (!bookmarkTopic) {
     notFound();
@@ -122,7 +81,11 @@ export default async function BookmarkTopicPage({
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="text-xl font-bold">{bookmarkTopic.name}</div>
-      <KanbanBoard cols={defaultCols} initialItems={initialItems} />
+      <KanbanBoard
+        initialQuadrants={initialQuadrants}
+        initialItems={initialItems}
+        quadrantArrangement={initialQuadrantArrangement}
+      />
     </div>
   );
 }

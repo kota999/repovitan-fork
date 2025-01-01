@@ -11,7 +11,7 @@ import { Badge } from "~/components/ui/badge";
 
 export interface Item {
   id: UniqueIdentifier;
-  columnId: string;
+  quadrantId: string;
   content: string;
   badge: string;
 }

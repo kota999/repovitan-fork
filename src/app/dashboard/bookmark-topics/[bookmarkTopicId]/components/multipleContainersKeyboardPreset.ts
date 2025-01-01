@@ -45,8 +45,8 @@ export const coordinateGetter: KeyboardCoordinateGetter = (
         const { type, children } = data;
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if (type === "Column" && children?.length > 0) {
-          if (active.data.current?.type !== "Column") {
+        if (type === "Quadrant" && children?.length > 0) {
+          if (active.data.current?.type !== "Quadrant") {
             return;
           }
         }
@@ -55,7 +55,7 @@ export const coordinateGetter: KeyboardCoordinateGetter = (
       switch (event.code) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         case KeyboardCode.Down:
-          if (active.data.current?.type === "Column") {
+          if (active.data.current?.type === "Quadrant") {
             return;
           }
           if (collisionRect.top < rect.top) {
@@ -65,7 +65,7 @@ export const coordinateGetter: KeyboardCoordinateGetter = (
           break;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         case KeyboardCode.Up:
-          if (active.data.current?.type === "Column") {
+          if (active.data.current?.type === "Quadrant") {
             return;
           }
           if (collisionRect.top > rect.top) {

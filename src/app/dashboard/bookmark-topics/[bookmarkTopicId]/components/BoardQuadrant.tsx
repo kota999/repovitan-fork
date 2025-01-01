@@ -11,25 +11,31 @@ import { Button } from "~/components/ui/button";
 import { GripVertical } from "lucide-react";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 
-export interface Column {
+export interface Quadrant {
   id: UniqueIdentifier;
   title: string;
 }
 
-export type ColumnType = "Column";
+export type QuadrantType = "Quadrant";
 
-export interface ColumnDragData {
-  type: ColumnType;
-  column: Column;
+export interface QuadrantDragData {
+  type: QuadrantType;
+  quadrant: Quadrant;
 }
 
-interface BoardColumnProps {
-  column: Column;
+interface BoardQuadrantProps {
+  quadrant: Quadrant;
   items: Item[];
+  quadrantGridRatio?: "hfull_w1/4" | "h1/2_wfull" | "h1/2_w1/2";
   isOverlay?: boolean;
 }
 
-export function BoardColumn({ column, items, isOverlay }: BoardColumnProps) {
+export function BoardQuadrant({
+  quadrant,
+  items,
+  quadrantGridRatio = "hfull_w1/4",
+  isOverlay,
+}: BoardQuadrantProps) {
   const itemsIds = useMemo(() => {
     return items.map((item) => item.id);
   }, [items]);
@@ -42,13 +48,13 @@ export function BoardColumn({ column, items, isOverlay }: BoardColumnProps) {
     transition,
     isDragging,
   } = useSortable({
-    id: column.id,
+    id: quadrant.id,
     data: {
-      type: "Column",
-      column,
-    } satisfies ColumnDragData,
+      type: "Quadrant",
+      quadrant: quadrant,
+    } satisfies QuadrantDragData,
     attributes: {
-      roleDescription: `Column: ${column.title}`,
+      roleDescription: `Quadrant: ${quadrant.title}`,
     },
   });
 
@@ -57,9 +63,18 @@ export function BoardColumn({ column, items, isOverlay }: BoardColumnProps) {
 
     transform: CSS.Translate.toString(transform),
   };
-
+  const hxw =
+    quadrantGridRatio === "hfull_w1/4"
+      ? "h-[620px] w-1/4"
+      : quadrantGridRatio === "h1/2_wfull"
+        ? "h-[310px] w-full"
+        : quadrantGridRatio === "h1/2_w1/2"
+          ? "h-[310px] w-full"
+          : "h-[620px] w-1/4";
   const variants = cva(
-    "h-[500px] max-h-[500px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center",
+    //"h-[500px] max-h-[500px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center",
+    //`h-[500px] max-h-[500px] w-${wRatio} max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center`,
+    `max-h-[620px] max-w-full ${hxw} bg-primary-foreground flex flex-col flex-shrink-0 snap-center`,
     {
       variants: {
         dragging: {
@@ -86,10 +101,10 @@ export function BoardColumn({ column, items, isOverlay }: BoardColumnProps) {
           {...listeners}
           className="relative -ml-2 h-auto cursor-grab p-1 text-primary/50"
         >
-          <span className="sr-only">{`Move column: ${column.title}`}</span>
+          <span className="sr-only">{`Move quadrant: ${quadrant.title}`}</span>
           <GripVertical />
         </Button>
-        <span className="ml-auto"> {column.title}</span>
+        <span className="ml-auto"> {quadrant.title}</span>
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
