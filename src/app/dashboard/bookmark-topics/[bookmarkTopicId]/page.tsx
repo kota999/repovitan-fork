@@ -1,31 +1,12 @@
 import { notFound } from "next/navigation";
-import { KanbanBoard } from "./components/KanbanBoard";
-import type { Quadrant } from "./components/BoardQuadrant";
-import type { Item } from "./components/ItemCard";
+import { KanbanBoard } from "./components/kanban-board";
+import type { Item } from "./components/item-card";
 import { getBookmarkTopic } from "~/db/query";
+import { auth } from "@clerk/nextjs/server";
 
 //const initialQuadrantArrangement = "horizontal"
 //const initialQuadrantArrangement = "vertical"
 const initialQuadrantArrangement = "grid2x2";
-
-const initialQuadrants = [
-  {
-    id: "q1",
-    title: "Todo",
-  },
-  {
-    id: "q2",
-    title: "In progress",
-  },
-  {
-    id: "q3",
-    title: "Done",
-  },
-  {
-    id: "q4",
-    title: "Freeze",
-  },
-] satisfies Quadrant[];
 
 const initialItems: Item[] = [
   {
@@ -71,12 +52,39 @@ export default async function BookmarkTopicPage({
 }: {
   params: Promise<{ bookmarkTopicId: string }>;
 }) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
   const { bookmarkTopicId } = await params;
   const bookmarkTopic = await getBookmarkTopic(bookmarkTopicId);
-
   if (!bookmarkTopic) {
     notFound();
   }
+
+  const initialQuadrants = [
+    {
+      id: "q1",
+      title: bookmarkTopic.quadrant1.name,
+      dbId: bookmarkTopic.quadrant1Id,
+    },
+    {
+      id: "q2",
+      title: bookmarkTopic.quadrant2.name,
+      dbId: bookmarkTopic.quadrant2Id,
+    },
+    {
+      id: "q3",
+      title: bookmarkTopic.quadrant3.name,
+      dbId: bookmarkTopic.quadrant3Id,
+    },
+    {
+      id: "q4",
+      title: bookmarkTopic.quadrant4.name,
+      dbId: bookmarkTopic.quadrant4Id,
+    },
+  ];
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

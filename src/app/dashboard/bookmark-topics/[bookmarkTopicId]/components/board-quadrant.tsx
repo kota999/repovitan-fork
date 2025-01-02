@@ -4,16 +4,18 @@ import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { useDndContext, type UniqueIdentifier } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { useMemo } from "react";
-import { type Item, ItemCard } from "./ItemCard";
+import { type Item, ItemCard } from "./item-card";
 import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { GripVertical } from "lucide-react";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
+import { EditableTitle } from "./editable-title";
 
 export interface Quadrant {
   id: UniqueIdentifier;
   title: string;
+  dbId: string;
 }
 
 export type QuadrantType = "Quadrant";
@@ -72,8 +74,6 @@ export function BoardQuadrant({
           ? "h-[310px] w-full"
           : "h-[620px] w-1/4";
   const variants = cva(
-    //"h-[500px] max-h-[500px] w-[350px] max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center",
-    //`h-[500px] max-h-[500px] w-${wRatio} max-w-full bg-primary-foreground flex flex-col flex-shrink-0 snap-center`,
     `max-h-[620px] max-w-full ${hxw} bg-primary-foreground flex flex-col flex-shrink-0 snap-center`,
     {
       variants: {
@@ -104,7 +104,9 @@ export function BoardQuadrant({
           <span className="sr-only">{`Move quadrant: ${quadrant.title}`}</span>
           <GripVertical />
         </Button>
-        <span className="ml-auto"> {quadrant.title}</span>
+        <div className="ml-auto">
+          <EditableTitle quadrantId={quadrant.dbId} title={quadrant.title} />
+        </div>
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">

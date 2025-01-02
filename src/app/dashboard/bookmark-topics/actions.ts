@@ -20,7 +20,7 @@ export const createBookmarkTopicAction = actionClient
   .action(async ({ parsedInput }) => {
     await createBookmarkTopic(parsedInput);
 
-    revalidatePath("/");
+    revalidatePath("/dashboard/bookmark-topics");
 
     return {
       successful: true,

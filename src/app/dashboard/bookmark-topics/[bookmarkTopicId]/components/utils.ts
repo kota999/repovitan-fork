@@ -1,6 +1,6 @@
 import type { Active, DataRef, Over } from "@dnd-kit/core";
-import type { QuadrantDragData } from "./BoardQuadrant";
-import type { ItemDragData } from "./ItemCard";
+import type { QuadrantDragData } from "./board-quadrant";
+import type { ItemDragData } from "./item-card";
 
 type DraggableData = QuadrantDragData | ItemDragData;
 

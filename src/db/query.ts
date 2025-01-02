@@ -13,6 +13,12 @@ export const getBookmarkTopic = async (bookmarkTopicId: string) => {
   const bookmarkTopic = await db.query.bookmarkTopicsTable.findFirst({
     where: (bookmarkTopicsTable, { eq }) =>
       eq(bookmarkTopicsTable.id, bookmarkTopicId),
+    with: {
+      quadrant1: true,
+      quadrant2: true,
+      quadrant3: true,
+      quadrant4: true,
+    },
   });
   return bookmarkTopic;
 };

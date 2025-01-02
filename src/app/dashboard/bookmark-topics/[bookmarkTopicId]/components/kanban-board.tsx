@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { BoardQuadrant, BoardContainer } from "./BoardQuadrant";
+import { BoardQuadrant, BoardContainer } from "./board-quadrant";
 import {
   DndContext,
   type DragEndEvent,
@@ -19,8 +19,8 @@ import {
   MouseSensor,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
-import { type Item, ItemCard } from "./ItemCard";
-import type { Quadrant } from "./BoardQuadrant";
+import { type Item, ItemCard } from "./item-card";
+import type { Quadrant } from "./board-quadrant";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
 

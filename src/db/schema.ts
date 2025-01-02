@@ -180,6 +180,18 @@ export const bookmarkTopicsTable = sqliteTable(
     userId: text()
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
+    quadrant1Id: text()
+      .notNull()
+      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+    quadrant2Id: text()
+      .notNull()
+      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+    quadrant3Id: text()
+      .notNull()
+      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+    quadrant4Id: text()
+      .notNull()
+      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
     createdAt: integer({ mode: "timestamp" })
       .notNull()
       .default(sql`(cast(unixepoch() as int))`),
@@ -199,8 +211,31 @@ export const bookmarkTopicsRelations = relations(
       fields: [bookmarkTopicsTable.userId],
       references: [usersTable.id],
     }),
+    quadrant1: one(topicQuadrantTable, {
+      fields: [bookmarkTopicsTable.quadrant1Id],
+      references: [topicQuadrantTable.id],
+    }),
+    quadrant2: one(topicQuadrantTable, {
+      fields: [bookmarkTopicsTable.quadrant2Id],
+      references: [topicQuadrantTable.id],
+    }),
+    quadrant3: one(topicQuadrantTable, {
+      fields: [bookmarkTopicsTable.quadrant3Id],
+      references: [topicQuadrantTable.id],
+    }),
+    quadrant4: one(topicQuadrantTable, {
+      fields: [bookmarkTopicsTable.quadrant4Id],
+      references: [topicQuadrantTable.id],
+    }),
   }),
 );
+
+export const topicQuadrantTable = sqliteTable("topic_quadrants", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => typeid("bml").toString()),
+  name: text().notNull(),
+});
 
 export const bookmarkListsTable = sqliteTable(
   "bookmark_lists",
