@@ -65,6 +65,7 @@ export function BoardQuadrant({
 
     transform: CSS.Translate.toString(transform),
   };
+  // TODO: 現在は完全にPC用レイアウト。
   const hxw =
     quadrantGridRatio === "hfull_w1/4"
       ? "h-[620px] w-1/4"

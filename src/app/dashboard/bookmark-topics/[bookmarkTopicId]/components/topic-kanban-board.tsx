@@ -34,7 +34,21 @@ const QuadrantArrangementLiteral = {
 type QuadrantArrangement =
   (typeof QuadrantArrangementLiteral)[keyof typeof QuadrantArrangementLiteral];
 
-export function KanbanBoard({
+const SystemQuadrants: Quadrant[] = [
+  // TODO: q-1, q-2のシステム用の象限に対する操作をブロックする。今は操作したら何が起きるか分からない。
+  {
+    id: "q-1",
+    title: "Inbox",
+    dbId: "",
+  },
+  {
+    id: "q-2",
+    title: "Memo",
+    dbId: "",
+  },
+] as const;
+
+export function TopicKanbanBoard({
   initialQuadrants,
   initialItems,
   quadrantArrangement,
@@ -45,7 +59,8 @@ export function KanbanBoard({
   quadrantArrangement: QuadrantArrangement;
   id?: string;
 }) {
-  const [quadrants, setQuadrants] = useState<Quadrant[]>(initialQuadrants);
+  const makeQuadrants = [...initialQuadrants, ...SystemQuadrants];
+  const [quadrants, setQuadrants] = useState<Quadrant[]>(makeQuadrants);
   const pickedUpItemQuadrant = useRef<string | null>(null);
   const quadrantsId = useMemo(
     () => quadrants.map((quadrant) => quadrant.id),
@@ -106,7 +121,7 @@ export function KanbanBoard({
           quadrant: quadrant,
         } = getDraggingItemData(active.id, pickedUpItemQuadrant.current);
         return `Picked up Item ${
-          active.data.current.item.content
+          active.data.current.item.title
         } at position: ${itemPosition + 1} of ${
           itemsInQuadrant.length
         } in quadrant ${quadrant?.title}`;
@@ -136,7 +151,7 @@ export function KanbanBoard({
           over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
         ) {
           return `Item ${
-            active.data.current.item.content
+            active.data.current.item.title
           } was moved over quadrant ${quadrant?.title} in position ${
             itemPosition + 1
           } of ${itemsInQuadrant.length}`;
@@ -151,10 +166,12 @@ export function KanbanBoard({
         pickedUpItemQuadrant.current = null;
         return;
       }
+      // Move Quadrant
       if (
         active.data.current?.type === "Quadrant" &&
         over.data.current?.type === "Quadrant"
       ) {
+        console.log("Quadrnt to Quadrant");
         const overQuadrantPosition = quadrantsId.findIndex(
           (id) => id === over.id,
         );
@@ -164,10 +181,12 @@ export function KanbanBoard({
         } was dropped into position ${overQuadrantPosition + 1} of ${
           quadrantsId.length
         }`;
+        // Move Item
       } else if (
         active.data.current?.type === "Item" &&
         over.data.current?.type === "Item"
       ) {
+        console.log(items);
         const {
           itemsInQuadrant: itemsInQuadrant,
           itemPosition,
@@ -176,10 +195,14 @@ export function KanbanBoard({
         if (
           over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
         ) {
+          console.log("Item to Quadrant");
+          // TODO: 登録処理
           return `Item was dropped into quadrant ${quadrant?.title} in position ${
             itemPosition + 1
           } of ${itemsInQuadrant.length}`;
         }
+        console.log("Item to Item");
+        // TODO: 登録処理
         return `Item was dropped into position ${itemPosition + 1} of ${
           itemsInQuadrant.length
         } in quadrant ${quadrant?.title}`;
@@ -222,15 +245,25 @@ export function KanbanBoard({
     >
       <BoardContainer>
         <SortableContext items={quadrantsId}>
-          <div className={`${boardQuadrantArrangement} gap-2`}>
-            {quadrants.map((quadrant) => (
-              <BoardQuadrant
-                key={quadrant.id}
-                quadrant={quadrant}
-                quadrantGridRatio={quadrantGridRatio}
-                items={items.filter((item) => item.quadrantId === quadrant.id)}
-              />
-            ))}
+          <div className="flex flex-col gap-2">
+            <div className={`${boardQuadrantArrangement} gap-2`}>
+              {quadrants.map((quadrant) => (
+                <BoardQuadrant
+                  key={quadrant.id}
+                  quadrant={quadrant}
+                  quadrantGridRatio={quadrantGridRatio}
+                  items={items.filter(
+                    (item) =>
+                      item.quadrantId === quadrant.id ||
+                      // 未登録のitemはInboxにとして初期表示
+                      (quadrant.id === SystemQuadrants[0]?.id &&
+                        !quadrants
+                          .slice(0, -SystemQuadrants.length)
+                          .find((q) => q.id === item.quadrantId)),
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </SortableContext>
       </BoardContainer>
