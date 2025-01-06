@@ -1,7 +1,37 @@
 import { eq } from "drizzle-orm";
 
 import { db } from ".";
-import { bookmarkTopicsTable, topicQuadrantTable } from "./schema";
+import {
+  bookmarkTopicsTable,
+  topicQuadrantsToBookmarksTable,
+  topicQuadrantTable,
+} from "./schema";
+
+export const createBookmarkTopic = async (userId: string, name: string) => {
+  await db.transaction(async (tx) => {
+    const createTopicQuadrant = async (name: string) => {
+      const resultSet = await tx
+        .insert(topicQuadrantTable)
+        .values({ name })
+        .returning({ insertedId: topicQuadrantTable.id });
+      return resultSet[0]?.insertedId ? resultSet[0].insertedId : "";
+    };
+    const quadrant1Id = await createTopicQuadrant("Quadrant1");
+    const quadrant2Id = await createTopicQuadrant("Quadrant2");
+    const quadrant3Id = await createTopicQuadrant("Quadrant3");
+    const quadrant4Id = await createTopicQuadrant("Quadrant4");
+
+    await tx.insert(bookmarkTopicsTable).values({
+      userId,
+      name,
+      icon: "",
+      quadrant1Id,
+      quadrant2Id,
+      quadrant3Id,
+      quadrant4Id,
+    });
+  });
+};
 
 export const updateTopicQuadrant = async ({
   quadrantId,
@@ -35,28 +65,33 @@ export const updateTopicQuadrant = async ({
   });
 };
 
-export const createBookmarkTopic = async (userId: string, name: string) => {
+export const createOrUpdateTopicQuadrantsToBookmarks = async ({
+  topicQuadrantsToBookmarks,
+}: {
+  topicQuadrantsToBookmarks: { quadrantId: string; bookmarkIds: string[] }[];
+}) => {
   await db.transaction(async (tx) => {
-    const createTopicQuadrant = async (name: string) => {
-      const resultSet = await tx
-        .insert(topicQuadrantTable)
-        .values({ name })
-        .returning({ insertedId: topicQuadrantTable.id });
-      return resultSet[0]?.insertedId ? resultSet[0].insertedId : "";
-    };
-    const quadrant1Id = await createTopicQuadrant("Quadrant1");
-    const quadrant2Id = await createTopicQuadrant("Quadrant2");
-    const quadrant3Id = await createTopicQuadrant("Quadrant3");
-    const quadrant4Id = await createTopicQuadrant("Quadrant4");
-
-    await tx.insert(bookmarkTopicsTable).values({
-      userId,
-      name,
-      icon: "",
-      quadrant1Id,
-      quadrant2Id,
-      quadrant3Id,
-      quadrant4Id,
-    });
+    await Promise.all(
+      topicQuadrantsToBookmarks.map(async (tq2b) => {
+        // delete if exist some records
+        await tx
+          .delete(topicQuadrantsToBookmarksTable)
+          .where(
+            eq(topicQuadrantsToBookmarksTable.quadrantId, tq2b.quadrantId),
+          );
+        // inset records
+        await Promise.all(
+          tq2b.bookmarkIds.map(async (bookmarkId, idx) => {
+            await tx
+              .insert(topicQuadrantsToBookmarksTable)
+              .values({
+                quadrantId: tq2b.quadrantId,
+                bookmarkId: bookmarkId,
+                position: idx,
+              });
+          }),
+        );
+      }),
+    );
   });
 };

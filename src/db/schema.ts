@@ -174,7 +174,7 @@ export const bookmarkTopicsTable = sqliteTable(
   {
     id: text()
       .primaryKey()
-      .$defaultFn(() => typeid("bml").toString()),
+      .$defaultFn(() => typeid("bt").toString()),
     name: text().notNull(),
     icon: text().notNull(),
     userId: text()
@@ -231,11 +231,42 @@ export const bookmarkTopicsRelations = relations(
 );
 
 export const topicQuadrantTable = sqliteTable("topic_quadrants", {
+  // quadrantId
   id: text()
     .primaryKey()
-    .$defaultFn(() => typeid("bml").toString()),
+    .$defaultFn(() => typeid("tq").toString()),
   name: text().notNull(),
 });
+
+export const topicQuadrantsToBookmarksTable = sqliteTable(
+  "topic_quadrants_to_bookmarks",
+  {
+    quadrantId: text().notNull(),
+    bookmarkId: text()
+      .notNull()
+      .references(() => bookmarksTable.id, { onDelete: "cascade" }),
+    position: integer(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.quadrantId, t.bookmarkId] }),
+    quadrantIdIdx: index("topic_quadrants_to_bookmarks_quadrantId_idx").on(
+      t.quadrantId,
+    ),
+    bookmarkIdIdx: index("topic_quadrants_to_bookmarks_bookmarkId_idx").on(
+      t.bookmarkId,
+    ),
+  }),
+);
+
+export const topicQuadrantsToBookmarksRelations = relations(
+  topicQuadrantsToBookmarksTable,
+  ({ one }) => ({
+    bookmark: one(bookmarksTable, {
+      fields: [topicQuadrantsToBookmarksTable.bookmarkId],
+      references: [bookmarksTable.id],
+    }),
+  }),
+);
 
 export const bookmarkListsTable = sqliteTable(
   "bookmark_lists",

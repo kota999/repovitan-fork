@@ -22,3 +22,31 @@ export const getBookmarkTopic = async (bookmarkTopicId: string) => {
   });
   return bookmarkTopic;
 };
+
+export const getTopicQuadrantsWithItems = async (quadrantIds: string[]) => {
+  const quadrantsWithItems = Promise.all(
+    quadrantIds.map(async (quadrantId) => {
+      const items = await db.query.topicQuadrantsToBookmarksTable.findMany({
+        where: (topicQuadrantsToBookmarksTable, { eq }) =>
+          eq(topicQuadrantsToBookmarksTable.quadrantId, quadrantId),
+        orderBy: (topicQuadrantsToBookmarksTable, { asc }) => [
+          asc(topicQuadrantsToBookmarksTable.position),
+        ],
+        with: {
+          bookmark: {
+            with: {
+              link: true,
+              bookmarksToTags: {
+                with: {
+                  tag: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return items;
+    }),
+  );
+  return quadrantsWithItems;
+};

@@ -15,7 +15,6 @@ import { EditableTitle } from "./editable-title";
 export interface Quadrant {
   id: UniqueIdentifier;
   title: string;
-  dbId: string;
 }
 
 export type QuadrantType = "Quadrant";
@@ -106,7 +105,10 @@ export function BoardQuadrant({
           <GripVertical />
         </Button>
         <div className="ml-auto">
-          <EditableTitle quadrantId={quadrant.dbId} title={quadrant.title} />
+          <EditableTitle
+            quadrantId={quadrant.id as string}
+            title={quadrant.title}
+          />
         </div>
       </CardHeader>
       <ScrollArea>

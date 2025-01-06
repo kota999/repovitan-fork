@@ -23,6 +23,7 @@ import { type Item, ItemCard } from "./item-card";
 import type { Quadrant } from "./board-quadrant";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
+import { saveQuadrantItemsAction } from "../actions";
 
 const defaultDndId = "kanban";
 
@@ -37,14 +38,12 @@ type QuadrantArrangement =
 const SystemQuadrants: Quadrant[] = [
   // TODO: q-1, q-2のシステム用の象限に対する操作をブロックする。今は操作したら何が起きるか分からない。
   {
-    id: "q-1",
+    id: "q-1", // System用のダミーID(未登録アイテムボックス)
     title: "Inbox",
-    dbId: "",
   },
   {
-    id: "q-2",
+    id: "q-2", // System用のダミーID(メモ作成用ボックス)
     title: "Memo",
-    dbId: "",
   },
 ] as const;
 
@@ -171,7 +170,6 @@ export function TopicKanbanBoard({
         active.data.current?.type === "Quadrant" &&
         over.data.current?.type === "Quadrant"
       ) {
-        console.log("Quadrnt to Quadrant");
         const overQuadrantPosition = quadrantsId.findIndex(
           (id) => id === over.id,
         );
@@ -186,7 +184,6 @@ export function TopicKanbanBoard({
         active.data.current?.type === "Item" &&
         over.data.current?.type === "Item"
       ) {
-        console.log(items);
         const {
           itemsInQuadrant: itemsInQuadrant,
           itemPosition,
@@ -195,14 +192,10 @@ export function TopicKanbanBoard({
         if (
           over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
         ) {
-          console.log("Item to Quadrant");
-          // TODO: 登録処理
           return `Item was dropped into quadrant ${quadrant?.title} in position ${
             itemPosition + 1
           } of ${itemsInQuadrant.length}`;
         }
-        console.log("Item to Item");
-        // TODO: 登録処理
         return `Item was dropped into position ${itemPosition + 1} of ${
           itemsInQuadrant.length
         } in quadrant ${quadrant?.title}`;
@@ -334,7 +327,7 @@ export function TopicKanbanBoard({
     });
   }
 
-  function onDragOver(event: DragOverEvent) {
+  async function onDragOver(event: DragOverEvent) {
     const { active, over } = event;
     if (!over) return;
 
@@ -353,13 +346,43 @@ export function TopicKanbanBoard({
 
     if (!isActiveAItem) return;
 
+    async function saveItemsActionFunc(saveItems: Item[]) {
+      // save
+      const quadrantsToBookmarks = [
+        {
+          quadrantId: (initialQuadrants[0]?.id as string) ?? "",
+          bookmarkIds: saveItems
+            .filter((item) => item.quadrantId === initialQuadrants[0]?.id)
+            .map((item) => item.id as string),
+        },
+        {
+          quadrantId: (initialQuadrants[1]?.id as string) ?? "",
+          bookmarkIds: saveItems
+            .filter((item) => item.quadrantId === initialQuadrants[1]?.id)
+            .map((item) => item.id as string),
+        },
+        {
+          quadrantId: (initialQuadrants[2]?.id as string) ?? "",
+          bookmarkIds: saveItems
+            .filter((item) => item.quadrantId === initialQuadrants[2]?.id)
+            .map((item) => item.id as string),
+        },
+        {
+          quadrantId: (initialQuadrants[3]?.id as string) ?? "",
+          bookmarkIds: saveItems
+            .filter((item) => item.quadrantId === initialQuadrants[3]?.id)
+            .map((item) => item.id as string),
+        },
+      ];
+      await saveQuadrantItemsAction(quadrantsToBookmarks);
+    }
     // Im dropping a Item over another Item
     if (isActiveAItem && isOverAItem) {
-      setItems((items) => {
-        const activeIndex = items.findIndex((t) => t.id === activeId);
-        const overIndex = items.findIndex((t) => t.id === overId);
-        const activeItem = items[activeIndex];
-        const overItem = items[overIndex];
+      const activeIndex = items.findIndex((t) => t.id === activeId);
+      const overIndex = items.findIndex((t) => t.id === overId);
+      const activeItem = items[activeIndex];
+      const overItem = items[overIndex];
+      const makeSaveItems = () => {
         if (
           activeItem &&
           overItem &&
@@ -368,16 +391,18 @@ export function TopicKanbanBoard({
           activeItem.quadrantId = overItem.quadrantId;
           return arrayMove(items, activeIndex, overIndex - 1);
         }
-
         return arrayMove(items, activeIndex, overIndex);
-      });
+      };
+      const newItems = makeSaveItems();
+      await saveItemsActionFunc(newItems);
+      setItems(newItems);
     }
 
     const isOverAQuadrant = overData?.type === "Quadrant";
 
     // Im dropping a Item over a quadrant
     if (isActiveAItem && isOverAQuadrant) {
-      setItems((items) => {
+      const makeSaveItems = () => {
         const activeIndex = items.findIndex((t) => t.id === activeId);
         const activeItem = items[activeIndex];
         if (activeItem) {
@@ -385,7 +410,10 @@ export function TopicKanbanBoard({
           return arrayMove(items, activeIndex, activeIndex);
         }
         return items;
-      });
+      };
+      const newItems = makeSaveItems();
+      await saveItemsActionFunc(newItems);
+      setItems(newItems);
     }
   }
 }

@@ -2,7 +2,10 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { updateTopicQuadrant } from "~/db/mutation";
+import {
+  createOrUpdateTopicQuadrantsToBookmarks,
+  updateTopicQuadrant,
+} from "~/db/mutation";
 import { actionClient } from "~/lib/safe-action";
 import {
   bindEditQuadrantTitleSchemas,
@@ -43,3 +46,15 @@ export const updateQuadrantTitleAction = actionClient
       };
     },
   );
+
+export const saveQuadrantItemsAction = async (
+  topicQuadrantsToItems: { quadrantId: string; bookmarkIds: string[] }[],
+) => {
+  await createOrUpdateTopicQuadrantsToBookmarks({
+    topicQuadrantsToBookmarks: topicQuadrantsToItems,
+  });
+  revalidatePath(`/`);
+  return {
+    successful: true,
+  };
+};
