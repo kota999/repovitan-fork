@@ -105,7 +105,7 @@ export function BoardQuadrant({
         dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
       })}
     >
-      <CardHeader className="space-between flex flex-row items-center border-b-2 p-4 text-left font-semibold">
+      <CardHeader className="space-between flex flex-row items-center space-y-0 border-b-2 p-4 text-left font-semibold">
         <Button
           variant={"ghost"}
           {...attributes}
@@ -127,7 +127,7 @@ export function BoardQuadrant({
         ) : (
           ""
         )}
-        <div className="ml-auto">
+        <div className="ml-auto p-1">
           <EditableTitle
             quadrantId={quadrant.id as string}
             title={quadrant.title}
