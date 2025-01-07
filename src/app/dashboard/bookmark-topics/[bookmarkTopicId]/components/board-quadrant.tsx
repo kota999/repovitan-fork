@@ -3,7 +3,7 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { useDndContext, type UniqueIdentifier } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { type Item, ItemCard } from "./item-card";
 import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
@@ -11,6 +11,8 @@ import { Button } from "~/components/ui/button";
 import { GripVertical } from "lucide-react";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { EditableTitle } from "./editable-title";
+import { ItemFilterForm } from "./item-filter-form";
+import { InboxQuadrantInfo } from "./topic-kanban-board";
 
 export interface Quadrant {
   id: UniqueIdentifier;
@@ -37,9 +39,19 @@ export function BoardQuadrant({
   quadrantGridRatio = "hfull_w1/4",
   isOverlay,
 }: BoardQuadrantProps) {
-  const itemsIds = useMemo(() => {
-    return items.map((item) => item.id);
-  }, [items]);
+  // filterKeywordはInboxのみで設定する
+  const [itemFilterKeyword, setItemFilterKeyword] = useState("");
+  const viewItems =
+    itemFilterKeyword === ""
+      ? items
+      : items.filter(
+          (item) =>
+            item.title.includes(itemFilterKeyword) ||
+            item.description.includes(itemFilterKeyword),
+        );
+  const viewItemsIds = useMemo(() => {
+    return viewItems.map((item) => item.id);
+  }, [viewItems]);
 
   const {
     setNodeRef,
@@ -61,7 +73,6 @@ export function BoardQuadrant({
 
   const style = {
     transition,
-
     transform: CSS.Translate.toString(transform),
   };
   // TODO: 現在は完全にPC用レイアウト。
@@ -104,6 +115,18 @@ export function BoardQuadrant({
           <span className="sr-only">{`Move quadrant: ${quadrant.title}`}</span>
           <GripVertical />
         </Button>
+        {quadrant.id === InboxQuadrantInfo.id ? (
+          <div className="w-auto pl-2">
+            <ItemFilterForm
+              itemFilterKeyword={itemFilterKeyword}
+              handleInputChange={(newValue: string) => {
+                setItemFilterKeyword(newValue);
+              }}
+            />
+          </div>
+        ) : (
+          ""
+        )}
         <div className="ml-auto">
           <EditableTitle
             quadrantId={quadrant.id as string}
@@ -113,8 +136,8 @@ export function BoardQuadrant({
       </CardHeader>
       <ScrollArea>
         <CardContent className="flex flex-grow flex-col gap-2 p-2">
-          <SortableContext items={itemsIds}>
-            {items.map((item) => (
+          <SortableContext items={viewItemsIds}>
+            {viewItems.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
           </SortableContext>

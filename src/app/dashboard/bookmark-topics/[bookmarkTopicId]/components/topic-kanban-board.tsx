@@ -35,16 +35,18 @@ const QuadrantArrangementLiteral = {
 type QuadrantArrangement =
   (typeof QuadrantArrangementLiteral)[keyof typeof QuadrantArrangementLiteral];
 
+export const InboxQuadrantInfo: Quadrant = {
+  id: "q-1", // System用のダミーID(未登録アイテムボックス)
+  title: "Inbox",
+};
+export const MemoQuadrantInfo: Quadrant = {
+  id: "q-2", // System用のダミーID(メモ作成用ボックス)
+  title: "Memo",
+};
 const SystemQuadrants: Quadrant[] = [
   // TODO: q-1, q-2のシステム用の象限に対する操作をブロックする。今は操作したら何が起きるか分からない。
-  {
-    id: "q-1", // System用のダミーID(未登録アイテムボックス)
-    title: "Inbox",
-  },
-  {
-    id: "q-2", // System用のダミーID(メモ作成用ボックス)
-    title: "Memo",
-  },
+  InboxQuadrantInfo,
+  MemoQuadrantInfo,
 ] as const;
 
 export function TopicKanbanBoard({
