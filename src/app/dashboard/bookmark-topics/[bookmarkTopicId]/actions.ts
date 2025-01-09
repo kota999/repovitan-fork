@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import {
   createOrUpdateTopicQuadrantsToBookmarks,
+  createTopicMemo,
   updateTopicQuadrant,
 } from "~/db/mutation";
 import { actionClient } from "~/lib/safe-action";
@@ -11,6 +12,7 @@ import {
   bindEditQuadrantTitleSchemas,
   updateQuadrantTitleSchema,
 } from "./validation";
+import type { ItemContentType } from "./components/item-card";
 
 async function updateQuadrantTitle({
   quadrantId,
@@ -48,12 +50,30 @@ export const updateQuadrantTitleAction = actionClient
   );
 
 export const saveQuadrantItemsAction = async (
-  topicQuadrantsToItems: { quadrantId: string; bookmarkIds: string[] }[],
+  topicQuadrantsToItems: {
+    quadrantId: string;
+    items: { itemId: string; itemType: ItemContentType }[];
+  }[],
 ) => {
   await createOrUpdateTopicQuadrantsToBookmarks({
-    topicQuadrantsToBookmarks: topicQuadrantsToItems,
+    topicQuadrantsToItems: topicQuadrantsToItems,
   });
-  revalidatePath(`/`);
+  revalidatePath("/dashboard/bookmark-topics");
+  return {
+    successful: true,
+  };
+};
+
+export const createTopicMemoAction = async ({
+  topicId,
+  memo,
+}: {
+  topicId: string;
+  memo: string;
+}) => {
+  await createTopicMemo({ topicId, memo });
+  // TODO: revalidatePathが効いてない？？
+  revalidatePath("/dashboard/bookmark-topics");
   return {
     successful: true,
   };

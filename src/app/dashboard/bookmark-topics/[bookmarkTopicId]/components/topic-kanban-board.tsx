@@ -38,11 +38,11 @@ type QuadrantArrangement =
 export const InboxQuadrantInfo: Quadrant = {
   id: "q-1", // System用のダミーID(未登録アイテムボックス)
   title: "Inbox",
-};
+} as const;
 export const MemoQuadrantInfo: Quadrant = {
   id: "q-2", // System用のダミーID(メモ作成用ボックス)
   title: "Memo",
-};
+} as const;
 const SystemQuadrants: Quadrant[] = [
   // TODO: q-1, q-2のシステム用の象限に対する操作をブロックする。今は操作したら何が起きるか分からない。
   InboxQuadrantInfo,
@@ -50,11 +50,13 @@ const SystemQuadrants: Quadrant[] = [
 ] as const;
 
 export function TopicKanbanBoard({
+  topicId,
   initialQuadrants,
   initialItems,
   quadrantArrangement,
   id = defaultDndId,
 }: {
+  topicId: string;
   initialQuadrants: Quadrant[];
   initialItems: Item[];
   quadrantArrangement: QuadrantArrangement;
@@ -122,7 +124,9 @@ export function TopicKanbanBoard({
           quadrant: quadrant,
         } = getDraggingItemData(active.id, pickedUpItemQuadrant.current);
         return `Picked up Item ${
-          active.data.current.item.title
+          active.data.current.item.type === "bookmark"
+            ? active.data.current.item.content.title
+            : active.data.current.item.content.content // memo
         } at position: ${itemPosition + 1} of ${
           itemsInQuadrant.length
         } in quadrant ${quadrant?.title}`;
@@ -152,7 +156,9 @@ export function TopicKanbanBoard({
           over.data.current.item.quadrantId !== pickedUpItemQuadrant.current
         ) {
           return `Item ${
-            active.data.current.item.title
+            active.data.current.item.type === "bookmark"
+              ? active.data.current.item.content.title
+              : active.data.current.item.content.content // memo
           } was moved over quadrant ${quadrant?.title} in position ${
             itemPosition + 1
           } of ${itemsInQuadrant.length}`;
@@ -245,16 +251,21 @@ export function TopicKanbanBoard({
               {quadrants.map((quadrant) => (
                 <BoardQuadrant
                   key={quadrant.id}
+                  topicId={topicId}
                   quadrant={quadrant}
                   quadrantGridRatio={quadrantGridRatio}
                   items={items.filter(
                     (item) =>
+                      //普通の象限に属するアイテム
                       item.quadrantId === quadrant.id ||
-                      // 未登録のitemはInboxにとして初期表示
-                      (quadrant.id === SystemQuadrants[0]?.id &&
-                        !quadrants
-                          .slice(0, -SystemQuadrants.length)
-                          .find((q) => q.id === item.quadrantId)),
+                      //普通の象限に属しないアイテム
+                      (!quadrants
+                        .slice(0, -SystemQuadrants.length)
+                        .find((q) => q.id === item.quadrantId) &&
+                        ((item.type === "bookmark" &&
+                          quadrant.id === InboxQuadrantInfo.id) || // BookmarkはInboxの象限
+                          (item.type === "memo" &&
+                            quadrant.id === MemoQuadrantInfo.id))), // MemoはMemoの象限
                   )}
                 />
               ))}
@@ -270,6 +281,7 @@ export function TopicKanbanBoard({
             {activeQuadrant && (
               <BoardQuadrant
                 isOverlay
+                topicId={topicId}
                 quadrant={activeQuadrant}
                 items={items.filter(
                   (item) => item.quadrantId === activeQuadrant.id,
@@ -348,35 +360,16 @@ export function TopicKanbanBoard({
 
     if (!isActiveAItem) return;
 
+    // TODO: memoへの対応
     async function saveItemsActionFunc(saveItems: Item[]) {
-      // save
-      const quadrantsToBookmarks = [
-        {
-          quadrantId: (initialQuadrants[0]?.id as string) ?? "",
-          bookmarkIds: saveItems
-            .filter((item) => item.quadrantId === initialQuadrants[0]?.id)
-            .map((item) => item.id as string),
-        },
-        {
-          quadrantId: (initialQuadrants[1]?.id as string) ?? "",
-          bookmarkIds: saveItems
-            .filter((item) => item.quadrantId === initialQuadrants[1]?.id)
-            .map((item) => item.id as string),
-        },
-        {
-          quadrantId: (initialQuadrants[2]?.id as string) ?? "",
-          bookmarkIds: saveItems
-            .filter((item) => item.quadrantId === initialQuadrants[2]?.id)
-            .map((item) => item.id as string),
-        },
-        {
-          quadrantId: (initialQuadrants[3]?.id as string) ?? "",
-          bookmarkIds: saveItems
-            .filter((item) => item.quadrantId === initialQuadrants[3]?.id)
-            .map((item) => item.id as string),
-        },
-      ];
-      await saveQuadrantItemsAction(quadrantsToBookmarks);
+      // 2x2の象限に決め撃ち
+      const quadrantsToItems = [0, 1, 2, 3].map((i) => ({
+        quadrantId: (initialQuadrants[i]?.id ?? "") as string,
+        items: saveItems
+          .filter((item) => item.quadrantId === initialQuadrants[i]?.id)
+          .map((item) => ({ itemId: item.id as string, itemType: item.type })),
+      }));
+      await saveQuadrantItemsAction(quadrantsToItems);
     }
     // Im dropping a Item over another Item
     if (isActiveAItem && isOverAItem) {

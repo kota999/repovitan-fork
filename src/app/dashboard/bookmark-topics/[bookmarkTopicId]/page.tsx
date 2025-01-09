@@ -1,13 +1,19 @@
 import { notFound } from "next/navigation";
 import { TopicKanbanBoard } from "./components/topic-kanban-board";
 import type { Item } from "./components/item-card";
-import { getBookmarkTopic, getTopicQuadrantsWithItems } from "~/db/query";
+import {
+  getBookmarks,
+  getBookmarkTopic,
+  getTopicMemos,
+  getTopicQuadrantsWithItemsRelation,
+} from "~/db/query";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "~/db";
 
 //const initialQuadrantArrangement = "horizontal"
 //const initialQuadrantArrangement = "vertical"
 const initialQuadrantArrangement = "grid2x2";
+
+export const dynamic = "force-dynamic";
 
 export default async function BookmarkTopicPage({
   params,
@@ -44,55 +50,85 @@ export default async function BookmarkTopicPage({
     },
   ];
 
-  // bookmarks (registered)
-  const quadrantsWithItems = await getTopicQuadrantsWithItems(
+  // relations for id of registered item (bookmark and memo) and quadrant
+  const registeredItemRelations = await getTopicQuadrantsWithItemsRelation(
     initialQuadrants.map((quadrant) => quadrant.id),
   );
-  const registeredBookmarks = quadrantsWithItems
+  // utility for filtering registered itemId
+  const registeredItemIds: string[] = registeredItemRelations
     .flat()
-    .map((qis) => ({ bookmark: qis.bookmark, quadrantId: qis.quadrantId }));
-  const registeredItems: Item[] = registeredBookmarks.map((bookmark) => ({
-    id: bookmark.bookmark.id,
-    quadrantId: bookmark.quadrantId,
-    title: bookmark.bookmark.title ?? "",
-    description: bookmark.bookmark.link.description ?? "",
-    imageUrl: bookmark.bookmark.link.imageUrl ?? "",
-    bookmarksToTags: bookmark.bookmark.bookmarksToTags,
-    badge: "bookmark",
-  }));
-  // not registered
-  const inboxBookmarks = await db.query.bookmarksTable.findMany({
-    where: (bookmarksTable, { notInArray }) =>
-      notInArray(
-        bookmarksTable.id,
-        registeredItems.map((item) => item.id as string),
-      ),
-    orderBy: (bookmarksTable, { desc }) => [desc(bookmarksTable.updatedAt)],
-    with: {
-      link: true,
-      bookmarksToTags: {
-        with: {
-          tag: true,
+    .map((item) => item.itemId);
+  // all bookmarks and memos (registered and not registered)
+  // TODO: 暫定で全件取得。いい感じのFetch単位はなんだ？
+  const bookmarks = await getBookmarks();
+  const memos = await getTopicMemos(bookmarkTopic.id);
+
+  // registered item ( = bookmark and memo)
+  const registeredItems: Item[] = registeredItemRelations.flat().map((rel) => {
+    if (rel.itemType === "bookmark") {
+      const bookmark = bookmarks.findLast(
+        (bookmark) => bookmark.id === rel.itemId,
+      );
+      return {
+        id: rel.itemId ?? "",
+        quadrantId: rel.quadrantId,
+        type: rel.itemType,
+        content: {
+          title: bookmark?.title ?? "",
+          description: bookmark?.link.description ?? "",
+          imageUrl: bookmark?.link.imageUrl ?? "",
+          bookmarksToTags:
+            bookmark?.bookmarksToTags.map((b2t) => ({
+              tag: { id: b2t.tag.id, name: b2t.tag.name },
+            })) ?? [],
         },
-      },
-    },
+      } satisfies Item;
+    } else {
+      // memo
+      const memo = memos.findLast((memo) => memo.memoId === rel.itemId);
+      return {
+        id: rel.itemId ?? "",
+        quadrantId: rel.quadrantId,
+        type: rel.itemType,
+        content: {
+          content: memo?.memo.content ?? "",
+        },
+      } satisfies Item;
+    }
   });
-  const inboxItems: Item[] = inboxBookmarks.map((bookmark) => ({
-    id: bookmark.id,
-    quadrantId: "",
-    title: bookmark.title ?? "",
-    description: bookmark.link.description ?? "",
-    imageUrl: bookmark.link.imageUrl ?? "",
-    bookmarksToTags: bookmark.bookmarksToTags,
-    badge: "bookmark",
-  }));
+  // not registered item (= bookmark) => Inbox)
+  const inboxItems: Item[] = bookmarks
+    .filter((bookmark) => !registeredItemIds.includes(bookmark.id))
+    .map((bookmark) => ({
+      id: bookmark.id,
+      quadrantId: "",
+      type: "bookmark",
+      content: {
+        title: bookmark.title ?? "",
+        description: bookmark.link.description ?? "",
+        imageUrl: bookmark.link.imageUrl ?? "",
+        bookmarksToTags: bookmark.bookmarksToTags,
+      },
+    }));
+  // not registered memo = memo box
+  const memoItems: Item[] = memos
+    .filter((memo) => !registeredItemIds.includes(memo.memoId))
+    .map((memo) => ({
+      id: memo.memoId,
+      quadrantId: "",
+      type: "memo",
+      content: {
+        content: memo.memo.content ?? "",
+      },
+    }));
   // initialItems (merged)
-  const initialItems = [...registeredItems, ...inboxItems];
+  const initialItems = [...registeredItems, ...inboxItems, ...memoItems];
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="text-xl font-bold">{bookmarkTopic.name}</div>
       <TopicKanbanBoard
+        topicId={bookmarkTopic.id}
         initialQuadrants={initialQuadrants}
         initialItems={initialItems}
         quadrantArrangement={initialQuadrantArrangement}

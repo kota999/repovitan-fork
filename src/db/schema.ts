@@ -230,6 +230,39 @@ export const bookmarkTopicsRelations = relations(
   }),
 );
 
+export const bookmarkTopicsToTopicMemosTable = sqliteTable(
+  "bookmark_topics_to_topic_memos",
+  {
+    topicId: text()
+      .notNull()
+      .references(() => bookmarkTopicsTable.id, { onDelete: "cascade" }),
+    memoId: text()
+      .notNull()
+      .references(() => topicMemosTable.id, { onDelete: "cascade" }),
+  },
+);
+
+export const bookmarkTopicsToTopicMemosRelation = relations(
+  bookmarkTopicsToTopicMemosTable,
+  ({ one }) => ({
+    topic: one(bookmarkTopicsTable, {
+      fields: [bookmarkTopicsToTopicMemosTable.topicId],
+      references: [bookmarkTopicsTable.id],
+    }),
+    memo: one(topicMemosTable, {
+      fields: [bookmarkTopicsToTopicMemosTable.memoId],
+      references: [topicMemosTable.id],
+    }),
+  }),
+);
+
+export const topicMemosTable = sqliteTable("topic_memos", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => typeid("tm").toString()),
+  content: text().notNull(),
+});
+
 export const topicQuadrantTable = sqliteTable("topic_quadrants", {
   // quadrantId
   id: text()
@@ -238,32 +271,31 @@ export const topicQuadrantTable = sqliteTable("topic_quadrants", {
   name: text().notNull(),
 });
 
-export const topicQuadrantsToBookmarksTable = sqliteTable(
-  "topic_quadrants_to_bookmarks",
+export const topicQuadrantsToItemsTable = sqliteTable(
+  "topic_quadrants_to_items",
   {
-    quadrantId: text().notNull(),
-    bookmarkId: text()
+    quadrantId: text()
       .notNull()
-      .references(() => bookmarksTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+    // item = bookmark or memo
+    itemId: text().notNull(),
+    itemType: text({ enum: ["bookmark", "memo"] }).notNull(),
     position: integer(),
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.quadrantId, t.bookmarkId] }),
-    quadrantIdIdx: index("topic_quadrants_to_bookmarks_quadrantId_idx").on(
+    pk: primaryKey({ columns: [t.quadrantId, t.itemId] }),
+    quadrantIdIdx: index("topic_quadrants_to_items_quadrantId_idx").on(
       t.quadrantId,
-    ),
-    bookmarkIdIdx: index("topic_quadrants_to_bookmarks_bookmarkId_idx").on(
-      t.bookmarkId,
     ),
   }),
 );
 
-export const topicQuadrantsToBookmarksRelations = relations(
-  topicQuadrantsToBookmarksTable,
+export const topicQuadrantsToItemsRelations = relations(
+  topicQuadrantsToItemsTable,
   ({ one }) => ({
-    bookmark: one(bookmarksTable, {
-      fields: [topicQuadrantsToBookmarksTable.bookmarkId],
-      references: [bookmarksTable.id],
+    topicQuadrant: one(topicQuadrantTable, {
+      fields: [topicQuadrantsToItemsTable.quadrantId],
+      references: [topicQuadrantTable.id],
     }),
   }),
 );

@@ -12,21 +12,23 @@ import { GripVertical } from "lucide-react";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { EditableTitle } from "./editable-title";
 import { ItemFilterForm } from "./item-filter-form";
-import { InboxQuadrantInfo } from "./topic-kanban-board";
+import { InboxQuadrantInfo, MemoQuadrantInfo } from "./topic-kanban-board";
+import { AddMemoDialog } from "./add-memo-dialog";
 
 export interface Quadrant {
   id: UniqueIdentifier;
   title: string;
 }
 
-export type QuadrantType = "Quadrant";
+export type QuadrantDropableType = "Quadrant";
 
 export interface QuadrantDragData {
-  type: QuadrantType;
+  type: QuadrantDropableType;
   quadrant: Quadrant;
 }
 
 interface BoardQuadrantProps {
+  topicId: string;
   quadrant: Quadrant;
   items: Item[];
   quadrantGridRatio?: "hfull_w1/4" | "h1/2_wfull" | "h1/2_w1/2";
@@ -34,6 +36,7 @@ interface BoardQuadrantProps {
 }
 
 export function BoardQuadrant({
+  topicId,
   quadrant,
   items,
   quadrantGridRatio = "hfull_w1/4",
@@ -46,8 +49,10 @@ export function BoardQuadrant({
       ? items
       : items.filter(
           (item) =>
-            item.title.includes(itemFilterKeyword) ||
-            item.description.includes(itemFilterKeyword),
+            item.type === "bookmark"
+              ? item.content.title.includes(itemFilterKeyword) ||
+                item.content.description.includes(itemFilterKeyword)
+              : item.content.content.includes(itemFilterKeyword), // memo
         );
   const viewItemsIds = useMemo(() => {
     return viewItems.map((item) => item.id);
@@ -107,7 +112,7 @@ export function BoardQuadrant({
     >
       <CardHeader className="space-between flex flex-row items-center space-y-0 border-b-2 p-4 text-left font-semibold">
         <Button
-          variant={"ghost"}
+          variant="ghost"
           {...attributes}
           {...listeners}
           className="relative -ml-2 h-auto cursor-grab p-1 text-primary/50"
@@ -124,6 +129,13 @@ export function BoardQuadrant({
               }}
             />
           </div>
+        ) : (
+          ""
+        )}
+        {quadrant.id === MemoQuadrantInfo.id ? (
+          <>
+            <AddMemoDialog topicId={topicId} />
+          </>
         ) : (
           ""
         )}

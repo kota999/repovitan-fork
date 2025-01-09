@@ -23,30 +23,47 @@ export const getBookmarkTopic = async (bookmarkTopicId: string) => {
   return bookmarkTopic;
 };
 
-export const getTopicQuadrantsWithItems = async (quadrantIds: string[]) => {
-  const quadrantsWithItems = Promise.all(
+export const getTopicQuadrantsWithItemsRelation = async (
+  quadrantIds: string[],
+) => {
+  const quadrantsWithItemsRelation = Promise.all(
     quadrantIds.map(async (quadrantId) => {
-      const items = await db.query.topicQuadrantsToBookmarksTable.findMany({
-        where: (topicQuadrantsToBookmarksTable, { eq }) =>
-          eq(topicQuadrantsToBookmarksTable.quadrantId, quadrantId),
-        orderBy: (topicQuadrantsToBookmarksTable, { asc }) => [
-          asc(topicQuadrantsToBookmarksTable.position),
+      // items fetch
+      const items = await db.query.topicQuadrantsToItemsTable.findMany({
+        where: (topicQuadrantsToItemsTable, { eq }) =>
+          eq(topicQuadrantsToItemsTable.quadrantId, quadrantId),
+        orderBy: (topicQuadrantsToItemsTable, { asc }) => [
+          asc(topicQuadrantsToItemsTable.position),
         ],
-        with: {
-          bookmark: {
-            with: {
-              link: true,
-              bookmarksToTags: {
-                with: {
-                  tag: true,
-                },
-              },
-            },
-          },
-        },
       });
       return items;
     }),
   );
-  return quadrantsWithItems;
+  return quadrantsWithItemsRelation;
+};
+
+export const getBookmarks = async () => {
+  const bookmarks = await db.query.bookmarksTable.findMany({
+    orderBy: (bookmarksTable, { desc }) => [desc(bookmarksTable.updatedAt)],
+    with: {
+      link: true,
+      bookmarksToTags: {
+        with: {
+          tag: true,
+        },
+      },
+    },
+  });
+  return bookmarks;
+};
+
+export const getTopicMemos = async (topicId: string) => {
+  const topicMemos = await db.query.bookmarkTopicsToTopicMemosTable.findMany({
+    where: (bookmarkTopicsToTopicMemosTable, { eq }) =>
+      eq(bookmarkTopicsToTopicMemosTable.topicId, topicId),
+    with: {
+      memo: true,
+    },
+  });
+  return topicMemos;
 };

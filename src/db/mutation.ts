@@ -3,9 +3,12 @@ import { eq } from "drizzle-orm";
 import { db } from ".";
 import {
   bookmarkTopicsTable,
-  topicQuadrantsToBookmarksTable,
+  bookmarkTopicsToTopicMemosTable,
+  topicMemosTable,
+  topicQuadrantsToItemsTable,
   topicQuadrantTable,
 } from "./schema";
+import type { ItemContentType } from "~/app/dashboard/bookmark-topics/[bookmarkTopicId]/components/item-card";
 
 export const createBookmarkTopic = async (userId: string, name: string) => {
   await db.transaction(async (tx) => {
@@ -14,7 +17,7 @@ export const createBookmarkTopic = async (userId: string, name: string) => {
         .insert(topicQuadrantTable)
         .values({ name })
         .returning({ insertedId: topicQuadrantTable.id });
-      return resultSet[0]?.insertedId ? resultSet[0].insertedId : "";
+      return resultSet[0]?.insertedId ?? "";
     };
     const quadrant1Id = await createTopicQuadrant("Quadrant1");
     const quadrant2Id = await createTopicQuadrant("Quadrant2");
@@ -66,32 +69,52 @@ export const updateTopicQuadrant = async ({
 };
 
 export const createOrUpdateTopicQuadrantsToBookmarks = async ({
-  topicQuadrantsToBookmarks,
+  topicQuadrantsToItems,
 }: {
-  topicQuadrantsToBookmarks: { quadrantId: string; bookmarkIds: string[] }[];
+  topicQuadrantsToItems: {
+    quadrantId: string;
+    items: { itemId: string; itemType: ItemContentType }[];
+  }[];
 }) => {
   await db.transaction(async (tx) => {
     await Promise.all(
-      topicQuadrantsToBookmarks.map(async (tq2b) => {
+      topicQuadrantsToItems.map(async (tq2b) => {
         // delete if exist some records
         await tx
-          .delete(topicQuadrantsToBookmarksTable)
-          .where(
-            eq(topicQuadrantsToBookmarksTable.quadrantId, tq2b.quadrantId),
-          );
+          .delete(topicQuadrantsToItemsTable)
+          .where(eq(topicQuadrantsToItemsTable.quadrantId, tq2b.quadrantId));
         // inset records
         await Promise.all(
-          tq2b.bookmarkIds.map(async (bookmarkId, idx) => {
-            await tx
-              .insert(topicQuadrantsToBookmarksTable)
-              .values({
-                quadrantId: tq2b.quadrantId,
-                bookmarkId: bookmarkId,
-                position: idx,
-              });
+          tq2b.items.map(async (item, idx) => {
+            await tx.insert(topicQuadrantsToItemsTable).values({
+              quadrantId: tq2b.quadrantId,
+              itemId: item.itemId,
+              itemType: item.itemType,
+              position: idx,
+            });
           }),
         );
       }),
     );
+  });
+};
+
+export const createTopicMemo = async ({
+  topicId,
+  memo,
+}: {
+  topicId: string;
+  memo: string;
+}) => {
+  await db.transaction(async (tx) => {
+    const resultSet = await tx
+      .insert(topicMemosTable)
+      .values({ content: memo })
+      .returning({ memoId: topicMemosTable.id });
+    const memoId = resultSet[0]?.memoId ?? "";
+    await tx.insert(bookmarkTopicsToTopicMemosTable).values({
+      topicId: topicId,
+      memoId: memoId,
+    });
   });
 };
