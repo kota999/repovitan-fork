@@ -182,16 +182,16 @@ export const bookmarkTopicsTable = sqliteTable(
       .references(() => usersTable.id, { onDelete: "cascade" }),
     quadrant1Id: text()
       .notNull()
-      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantsTable.id, { onDelete: "cascade" }),
     quadrant2Id: text()
       .notNull()
-      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantsTable.id, { onDelete: "cascade" }),
     quadrant3Id: text()
       .notNull()
-      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantsTable.id, { onDelete: "cascade" }),
     quadrant4Id: text()
       .notNull()
-      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantsTable.id, { onDelete: "cascade" }),
     createdAt: integer({ mode: "timestamp" })
       .notNull()
       .default(sql`(cast(unixepoch() as int))`),
@@ -211,21 +211,21 @@ export const bookmarkTopicsRelations = relations(
       fields: [bookmarkTopicsTable.userId],
       references: [usersTable.id],
     }),
-    quadrant1: one(topicQuadrantTable, {
+    quadrant1: one(topicQuadrantsTable, {
       fields: [bookmarkTopicsTable.quadrant1Id],
-      references: [topicQuadrantTable.id],
+      references: [topicQuadrantsTable.id],
     }),
-    quadrant2: one(topicQuadrantTable, {
+    quadrant2: one(topicQuadrantsTable, {
       fields: [bookmarkTopicsTable.quadrant2Id],
-      references: [topicQuadrantTable.id],
+      references: [topicQuadrantsTable.id],
     }),
-    quadrant3: one(topicQuadrantTable, {
+    quadrant3: one(topicQuadrantsTable, {
       fields: [bookmarkTopicsTable.quadrant3Id],
-      references: [topicQuadrantTable.id],
+      references: [topicQuadrantsTable.id],
     }),
-    quadrant4: one(topicQuadrantTable, {
+    quadrant4: one(topicQuadrantsTable, {
       fields: [bookmarkTopicsTable.quadrant4Id],
-      references: [topicQuadrantTable.id],
+      references: [topicQuadrantsTable.id],
     }),
   }),
 );
@@ -256,27 +256,62 @@ export const bookmarkTopicsToTopicMemosRelation = relations(
   }),
 );
 
-export const topicMemosTable = sqliteTable("topic_memos", {
-  id: text()
-    .primaryKey()
-    .$defaultFn(() => typeid("tm").toString()),
-  content: text().notNull(),
-});
+export const topicMemosTable = sqliteTable(
+  "topic_memos",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("tm").toString()),
+    userId: text()
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    content: text().notNull(),
+  },
+  (t) => ({
+    userIdIdx: index("memos_userId_idx").on(t.userId),
+  }),
+);
+export const topicMemosRelation = relations(topicMemosTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [topicMemosTable.userId],
+    references: [usersTable.id],
+  }),
+}));
 
-export const topicQuadrantTable = sqliteTable("topic_quadrants", {
-  // quadrantId
-  id: text()
-    .primaryKey()
-    .$defaultFn(() => typeid("tq").toString()),
-  name: text().notNull(),
-});
+// TODO: cascadeで消し飛ぶようにする
+export const topicQuadrantsTable = sqliteTable(
+  "topic_quadrants",
+  {
+    // quadrantId
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("tq").toString()),
+    userId: text()
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+  },
+  (t) => ({
+    userIdIdx: index("topic_quadrants_userId_idx").on(t.userId),
+  }),
+);
+
+export const topicQuadrantsRelation = relations(
+  topicQuadrantsTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [topicQuadrantsTable.userId],
+      references: [usersTable.id],
+    }),
+  }),
+);
 
 export const topicQuadrantsToItemsTable = sqliteTable(
   "topic_quadrants_to_items",
   {
     quadrantId: text()
       .notNull()
-      .references(() => topicQuadrantTable.id, { onDelete: "cascade" }),
+      .references(() => topicQuadrantsTable.id, { onDelete: "cascade" }),
     // item = bookmark or memo
     itemId: text().notNull(),
     itemType: text({ enum: ["bookmark", "memo"] }).notNull(),
@@ -293,9 +328,9 @@ export const topicQuadrantsToItemsTable = sqliteTable(
 export const topicQuadrantsToItemsRelations = relations(
   topicQuadrantsToItemsTable,
   ({ one }) => ({
-    topicQuadrant: one(topicQuadrantTable, {
+    topicQuadrant: one(topicQuadrantsTable, {
       fields: [topicQuadrantsToItemsTable.quadrantId],
-      references: [topicQuadrantTable.id],
+      references: [topicQuadrantsTable.id],
     }),
   }),
 );

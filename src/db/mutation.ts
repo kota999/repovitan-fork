@@ -5,18 +5,28 @@ import {
   bookmarkTopicsTable,
   bookmarkTopicsToTopicMemosTable,
   topicMemosTable,
+  topicQuadrantsTable,
   topicQuadrantsToItemsTable,
-  topicQuadrantTable,
+  usersTable,
 } from "./schema";
 import type { ItemContentType } from "~/app/dashboard/bookmark-topics/[bookmarkTopicId]/components/item-card";
+
+export const createUser = async (userId: string, username: string) => {
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(usersTable)
+      .values({ id: userId, username: username })
+      .onConflictDoNothing();
+  });
+};
 
 export const createBookmarkTopic = async (userId: string, name: string) => {
   await db.transaction(async (tx) => {
     const createTopicQuadrant = async (name: string) => {
       const resultSet = await tx
-        .insert(topicQuadrantTable)
-        .values({ name })
-        .returning({ insertedId: topicQuadrantTable.id });
+        .insert(topicQuadrantsTable)
+        .values({ userId, name })
+        .returning({ insertedId: topicQuadrantsTable.id });
       return resultSet[0]?.insertedId ?? "";
     };
     const quadrant1Id = await createTopicQuadrant("Quadrant1");
@@ -57,9 +67,9 @@ export const updateTopicQuadrant = async ({
     //if(!topic) return //error
 
     await tx
-      .update(topicQuadrantTable)
+      .update(topicQuadrantsTable)
       .set({ name })
-      .where(eq(topicQuadrantTable.id, quadrantId));
+      .where(eq(topicQuadrantsTable.id, quadrantId));
     // TODO: 画面更新が上手くいかなかった件で試したが、意味なかったので一旦なし
     //await tx
     //  .update(bookmarkTopicsTable)
@@ -100,16 +110,18 @@ export const createOrUpdateTopicQuadrantsToBookmarks = async ({
 };
 
 export const createTopicMemo = async ({
+  userId,
   topicId,
   memo,
 }: {
+  userId: string;
   topicId: string;
   memo: string;
 }) => {
   await db.transaction(async (tx) => {
     const resultSet = await tx
       .insert(topicMemosTable)
-      .values({ content: memo })
+      .values({ userId: userId, content: memo })
       .returning({ memoId: topicMemosTable.id });
     const memoId = resultSet[0]?.memoId ?? "";
     await tx.insert(bookmarkTopicsToTopicMemosTable).values({

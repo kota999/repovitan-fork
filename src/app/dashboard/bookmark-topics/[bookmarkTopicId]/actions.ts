@@ -71,7 +71,11 @@ export const createTopicMemoAction = async ({
   topicId: string;
   memo: string;
 }) => {
-  await createTopicMemo({ topicId, memo });
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+  await createTopicMemo({ userId, topicId, memo });
   // TODO: revalidatePathが効いてない？？
   revalidatePath("/dashboard/bookmark-topics");
   return {
