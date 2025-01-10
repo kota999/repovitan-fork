@@ -139,10 +139,11 @@ export function ItemCard({ item, isOverlay }: ItemCardProps) {
             <a href={`/dashboard/bookmarks/${item.id}`}>
               <div className="flex flex-row gap-2">
                 {/* TODO: 画像のサイズは適当なのでいい感じにする */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={item.content.imageUrl}
                   alt="avatar"
-                  key={item.content.imageUrl}
+                  key={item.id}
                   width="128"
                   height="64"
                 />
