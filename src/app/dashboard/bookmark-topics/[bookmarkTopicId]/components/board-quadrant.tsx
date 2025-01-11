@@ -15,6 +15,8 @@ import { ItemFilterForm } from "./item-filter-form";
 import { InboxQuadrantInfo, MemoQuadrantInfo } from "./topic-kanban-board";
 import { AddMemoDialog } from "./add-memo-dialog";
 
+const DragQuadrantIsEnable = false;
+
 export interface Quadrant {
   id: UniqueIdentifier;
   title: string;
@@ -33,6 +35,7 @@ interface BoardQuadrantProps {
   items: Item[];
   quadrantGridRatio?: "hfull_w1/4" | "h1/2_wfull" | "h1/2_w1/2";
   isOverlay?: boolean;
+  updateQuadrantTitleState: (quadrantId: string, title: string) => void;
 }
 
 export function BoardQuadrant({
@@ -41,6 +44,7 @@ export function BoardQuadrant({
   items,
   quadrantGridRatio = "hfull_w1/4",
   isOverlay,
+  updateQuadrantTitleState,
 }: BoardQuadrantProps) {
   // filterKeywordはInboxのみで設定する
   const [itemFilterKeyword, setItemFilterKeyword] = useState("");
@@ -111,15 +115,19 @@ export function BoardQuadrant({
       })}
     >
       <CardHeader className="space-between flex flex-row items-center space-y-0 border-b-2 p-4 text-left font-semibold">
-        <Button
-          variant="ghost"
-          {...attributes}
-          {...listeners}
-          className="relative -ml-2 h-auto cursor-grab p-1 text-primary/50"
-        >
-          <span className="sr-only">{`Move quadrant: ${quadrant.title}`}</span>
-          <GripVertical />
-        </Button>
+        {DragQuadrantIsEnable ? (
+          <Button
+            variant="ghost"
+            {...attributes}
+            {...listeners}
+            className="relative -ml-2 h-auto cursor-grab p-1 text-primary/50"
+          >
+            <span className="sr-only">{`Move quadrant: ${quadrant.title}`}</span>
+            <GripVertical />
+          </Button>
+        ) : (
+          ""
+        )}
         {quadrant.id === InboxQuadrantInfo.id ? (
           <div className="w-auto pl-2">
             <ItemFilterForm
@@ -143,6 +151,7 @@ export function BoardQuadrant({
           <EditableTitle
             quadrantId={quadrant.id as string}
             title={quadrant.title}
+            updateQuadrantTitleState={updateQuadrantTitleState}
           />
         </div>
       </CardHeader>

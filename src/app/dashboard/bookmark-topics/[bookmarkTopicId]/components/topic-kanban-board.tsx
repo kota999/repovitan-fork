@@ -267,6 +267,7 @@ export function TopicKanbanBoard({
                           (item.type === "memo" &&
                             quadrant.id === MemoQuadrantInfo.id))), // MemoはMemoの象限
                   )}
+                  updateQuadrantTitleState={updateQuadrantTitle}
                 />
               ))}
             </div>
@@ -286,6 +287,7 @@ export function TopicKanbanBoard({
                 items={items.filter(
                   (item) => item.quadrantId === activeQuadrant.id,
                 )}
+                updateQuadrantTitleState={updateQuadrantTitle}
               />
             )}
             {activeItem && <ItemCard item={activeItem} isOverlay />}
@@ -410,5 +412,14 @@ export function TopicKanbanBoard({
       await saveItemsActionFunc(newItems);
       setItems(newItems);
     }
+  }
+
+  function updateQuadrantTitle(quadrantId: string, title: string) {
+    setQuadrants(
+      quadrants.map((quadrant) => ({
+        id: quadrant.id,
+        title: quadrant.id === quadrantId ? title : quadrant.title,
+      })),
+    );
   }
 }

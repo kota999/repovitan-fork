@@ -13,9 +13,11 @@ import { updateQuadrantTitleSchema } from "../validation";
 export const EditableTitle = ({
   quadrantId,
   title,
+  updateQuadrantTitleState,
 }: {
   quadrantId: string;
   title: string;
+  updateQuadrantTitleState: (quadrantId: string, title: string) => void;
 }) => {
   const [edit, setEdit] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +43,8 @@ export const EditableTitle = ({
               title: input.title,
             };
           },
-          onSuccess: () => {
+          onSuccess: ({ input }) => {
+            updateQuadrantTitleState(quadrantId, input.title);
             toast.success("Title updated");
           },
         },
