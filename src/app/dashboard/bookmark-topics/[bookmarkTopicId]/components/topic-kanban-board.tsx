@@ -268,6 +268,7 @@ export function TopicKanbanBoard({
                             quadrant.id === MemoQuadrantInfo.id))), // MemoはMemoの象限
                   )}
                   updateQuadrantTitleState={updateQuadrantTitle}
+                  addMemoState={addMemoState}
                 />
               ))}
             </div>
@@ -288,6 +289,7 @@ export function TopicKanbanBoard({
                   (item) => item.quadrantId === activeQuadrant.id,
                 )}
                 updateQuadrantTitleState={updateQuadrantTitle}
+                addMemoState={addMemoState}
               />
             )}
             {activeItem && <ItemCard item={activeItem} isOverlay />}
@@ -421,5 +423,19 @@ export function TopicKanbanBoard({
         title: quadrant.id === quadrantId ? title : quadrant.title,
       })),
     );
+  }
+
+  function addMemoState(memoId: string, memo: string) {
+    setItems([
+      ...items,
+      {
+        id: memoId,
+        quadrantId: "",
+        type: "memo",
+        content: {
+          content: memo,
+        },
+      },
+    ]);
   }
 }

@@ -37,9 +37,10 @@ const FormSchema = z.object({
 
 interface DialogProps {
   topicId: string;
+  addMemoState: (topicId: string, memo: string) => void;
 }
 
-export function AddMemoDialog({ topicId }: DialogProps) {
+export function AddMemoDialog({ topicId, addMemoState }: DialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -52,7 +53,10 @@ export function AddMemoDialog({ topicId }: DialogProps) {
         topicId: topicId,
         memo: data.memo,
       });
-      if (result.successful) toast.success("Memo for bookmark topic added");
+      if (result.successful) {
+        addMemoState(result.memoId, data.memo);
+        toast.success("Memo for bookmark topic added");
+      }
       setOpen(false);
     });
   }

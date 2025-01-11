@@ -36,6 +36,7 @@ interface BoardQuadrantProps {
   quadrantGridRatio?: "hfull_w1/4" | "h1/2_wfull" | "h1/2_w1/2";
   isOverlay?: boolean;
   updateQuadrantTitleState: (quadrantId: string, title: string) => void;
+  addMemoState: (topicId: string, memo: string) => void;
 }
 
 export function BoardQuadrant({
@@ -45,6 +46,7 @@ export function BoardQuadrant({
   quadrantGridRatio = "hfull_w1/4",
   isOverlay,
   updateQuadrantTitleState,
+  addMemoState,
 }: BoardQuadrantProps) {
   // filterKeywordはInboxのみで設定する
   const [itemFilterKeyword, setItemFilterKeyword] = useState("");
@@ -142,7 +144,7 @@ export function BoardQuadrant({
         )}
         {quadrant.id === MemoQuadrantInfo.id ? (
           <>
-            <AddMemoDialog topicId={topicId} />
+            <AddMemoDialog topicId={topicId} addMemoState={addMemoState} />
           </>
         ) : (
           ""

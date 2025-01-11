@@ -54,27 +54,10 @@ export const updateTopicQuadrant = async ({
   name: string;
 }) => {
   await db.transaction(async (tx) => {
-    // TODO: 画面更新が上手くいかなかった件で試したが、意味なかったので一旦なし
-    //const topic = await tx.query.bookmarkTopicsTable.findFirst({
-    //  where: (bookmarkTopicsTable, { eq, or }) =>
-    //    or(
-    //      eq(bookmarkTopicsTable.quadrant1Id, quadrantId),
-    //      eq(bookmarkTopicsTable.quadrant2Id, quadrantId),
-    //      eq(bookmarkTopicsTable.quadrant3Id, quadrantId),
-    //      eq(bookmarkTopicsTable.quadrant4Id, quadrantId),
-    //    ),
-    //})
-    //if(!topic) return //error
-
     await tx
       .update(topicQuadrantsTable)
       .set({ name })
       .where(eq(topicQuadrantsTable.id, quadrantId));
-    // TODO: 画面更新が上手くいかなかった件で試したが、意味なかったので一旦なし
-    //await tx
-    //  .update(bookmarkTopicsTable)
-    //  .set({updatedAt: new Date()})
-    //  .where(eq(bookmarkTopicsTable.id, topic.id))
   });
 };
 
@@ -118,15 +101,17 @@ export const createTopicMemo = async ({
   topicId: string;
   memo: string;
 }) => {
+  let memoId = "";
   await db.transaction(async (tx) => {
     const resultSet = await tx
       .insert(topicMemosTable)
       .values({ userId: userId, content: memo })
       .returning({ memoId: topicMemosTable.id });
-    const memoId = resultSet[0]?.memoId ?? "";
+    memoId = resultSet[0]?.memoId ?? "";
     await tx.insert(bookmarkTopicsToTopicMemosTable).values({
       topicId: topicId,
       memoId: memoId,
     });
   });
+  return memoId;
 };
