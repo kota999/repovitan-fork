@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from ".";
+import { bookmarkTagsTable } from "./schema";
 
 export const getBookmarkTopics = async () => {
   const bookmarkTopics = await db.query.bookmarkTopicsTable.findMany({
@@ -66,4 +68,27 @@ export const getTopicMemos = async (topicId: string) => {
     },
   });
   return topicMemos;
+};
+
+export const getBookmarkTags = async (userId?: string) => {
+  const condition =
+    userId === undefined ? undefined : eq(bookmarkTagsTable.userId, userId);
+  const bookmarkTags = await db.query.bookmarkTagsTable.findMany({
+    where: condition,
+    orderBy: (bookmarkTagsTable, { desc }) => [
+      desc(bookmarkTagsTable.updatedAt),
+    ],
+  });
+  return bookmarkTags;
+};
+
+export const getAutoTags = async (userId: string) => {
+  const autoTags = await db.query.autoTagsForNpmPackagesTable.findMany({
+    where: (autoTagsForNpmPackagesTable, { eq }) =>
+      eq(autoTagsForNpmPackagesTable.userId, userId),
+    with: {
+      tag: true,
+    },
+  });
+  return autoTags;
 };

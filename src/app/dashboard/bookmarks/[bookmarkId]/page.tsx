@@ -8,6 +8,7 @@ import { db } from "~/db";
 import { CreateNodejsProjectButton } from "./create-nodejs-project-button";
 import { EditableTitle } from "./editable-title";
 import { MultiSelectTags } from "./multi-select-tags";
+import { getBookmarkTags } from "~/db/query";
 
 export default async function BookmarkPage({
   params,
@@ -36,9 +37,7 @@ export default async function BookmarkPage({
     notFound();
   }
 
-  const bookmarkTags = await db.query.bookmarkTagsTable.findMany({
-    where: (bookmarkTags, { eq }) => eq(bookmarkTags.userId, userId),
-  });
+  const bookmarkTags = await getBookmarkTags(userId);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

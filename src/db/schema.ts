@@ -519,6 +519,37 @@ export const nodejsProjectsToNpmPackagesRelations = relations(
   }),
 );
 
+export const autoTagsForNpmPackagesTable = sqliteTable(
+  "auto_tags_for_npm_packages",
+  {
+    userId: text()
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    tagId: text()
+      .notNull()
+      .references(() => bookmarkTagsTable.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.tagId] }),
+    userIdIdx: index("auto_tags_for_npm_package_userId_idx").on(t.userId),
+    tagIdIdx: index("auto_tags_for_npm_package_tagId_idx").on(t.tagId),
+  }),
+);
+
+export const autoTagsForNpmPackagesRelation = relations(
+  autoTagsForNpmPackagesTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [autoTagsForNpmPackagesTable.userId],
+      references: [usersTable.id],
+    }),
+    tag: one(bookmarkTagsTable, {
+      fields: [autoTagsForNpmPackagesTable.tagId],
+      references: [bookmarkTagsTable.id],
+    }),
+  }),
+);
+
 export const tasks = sqliteTable("tasks", {
   id: text({ length: 30 })
     .primaryKey()

@@ -53,6 +53,13 @@ const data = {
       title: "Bookmark Tags",
       url: "/dashboard/bookmark-tags",
       icon: TagIcon,
+      isActive: true,
+      items: [
+        {
+          title: "Auto Tagging",
+          url: "/dashboard/auto-taggings",
+        },
+      ],
     },
     {
       title: "NPM Packages",
