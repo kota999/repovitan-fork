@@ -522,6 +522,9 @@ export const nodejsProjectsToNpmPackagesRelations = relations(
 export const autoTagsForNpmPackagesTable = sqliteTable(
   "auto_tags_for_npm_packages",
   {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("at").toString()),
     userId: text()
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
@@ -530,7 +533,7 @@ export const autoTagsForNpmPackagesTable = sqliteTable(
       .references(() => bookmarkTagsTable.id, { onDelete: "cascade" }),
   },
   (t) => ({
-    pk: primaryKey({ columns: [t.userId, t.tagId] }),
+    uniq: unique().on(t.userId, t.tagId),
     userIdIdx: index("auto_tags_for_npm_package_userId_idx").on(t.userId),
     tagIdIdx: index("auto_tags_for_npm_package_tagId_idx").on(t.tagId),
   }),

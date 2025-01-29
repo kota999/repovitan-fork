@@ -44,12 +44,12 @@ export const MultiSelectTags = ({
           if (data?.successful) {
             form.reset({ tagNames });
             action.reset();
-            toast.success("Tag added");
+            toast.success("Auto tag setting changed");
           }
         },
         onError: ({ error: { serverError } }) => {
           const description = serverError;
-          toast.error("Failed to add bookmark list", {
+          toast.error("Failed to change setting for auto tagging", {
             description,
           });
         },
