@@ -5,7 +5,7 @@ import { MultiSelectTags } from "./multi-select-tags";
 
 export const dynamic = "force-dynamic";
 
-export default async function BookmarkTagsPage() {
+export default async function AutoTagsPage() {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthorized");
@@ -29,9 +29,9 @@ export default async function BookmarkTagsPage() {
       {/* list for settings of auto tagging tags */}
       <div>
         <ul className="list-inside list-disc">
-          {autoTags.map(({ tag: { id, name } }) => (
+          {autoTags.map(({ id, tag: { name } }) => (
             <li key={id}>
-              <Link href={`/dashboard/bookmark-tags/${id}`}>{name}</Link>
+              <Link href={`/dashboard/auto-taggings/${id}`}>{name}</Link>
             </li>
           ))}
         </ul>

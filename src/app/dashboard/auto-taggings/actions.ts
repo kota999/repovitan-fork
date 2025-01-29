@@ -3,7 +3,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "~/db";
-import { autoTagsForNpmPackagesTable } from "~/db/schema";
+import { autoTagKeywordsTable, autoTagsForNpmPackagesTable } from "~/db/schema";
 import { authActionClient } from "~/lib/safe-action";
 import { updateAutoTagsSchema } from "./validation";
 
@@ -50,12 +50,28 @@ export const updateAutoTags = async (userId: string, tagNames: string[]) => {
     }
 
     if (attach.length > 0) {
-      await tx
+      const attachedAutoTags = await tx
         .insert(autoTagsForNpmPackagesTable)
         .values(
           attach.map((tagId) => ({
             tagId,
             userId,
+          })),
+        )
+        .onConflictDoNothing()
+        .returning({
+          autoTagId: autoTagsForNpmPackagesTable.id,
+          tagId: autoTagsForNpmPackagesTable.tagId,
+        });
+      await tx
+        .insert(autoTagKeywordsTable)
+        .values(
+          attachedAutoTags.map((attachedAutoTag) => ({
+            autoTagId: attachedAutoTag.autoTagId,
+            keyword:
+              bookmarkTags.find(
+                (bookmarkTag) => bookmarkTag.id === attachedAutoTag.tagId,
+              )?.name ?? "",
           })),
         )
         .onConflictDoNothing();

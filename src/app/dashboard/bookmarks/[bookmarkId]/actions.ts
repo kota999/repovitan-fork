@@ -268,10 +268,11 @@ export const createNodejsProjectAction = authActionClient
             eq(autoTagsForNpmPackagesTable.userId, userId),
           with: {
             tag: true,
+            keyword: true,
           },
         });
         const taggingTags = autoTags.filter((autoTag) =>
-          npmPackages.includes(autoTag.tag.name),
+          autoTag.keyword.find((k) => npmPackages.includes(k.keyword)),
         );
         // setting tags
         if (taggingTags.length > 0) {

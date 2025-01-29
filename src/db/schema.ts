@@ -541,7 +541,7 @@ export const autoTagsForNpmPackagesTable = sqliteTable(
 
 export const autoTagsForNpmPackagesRelation = relations(
   autoTagsForNpmPackagesTable,
-  ({ one }) => ({
+  ({ one, many }) => ({
     user: one(usersTable, {
       fields: [autoTagsForNpmPackagesTable.userId],
       references: [usersTable.id],
@@ -549,6 +549,37 @@ export const autoTagsForNpmPackagesRelation = relations(
     tag: one(bookmarkTagsTable, {
       fields: [autoTagsForNpmPackagesTable.tagId],
       references: [bookmarkTagsTable.id],
+    }),
+    keyword: many(autoTagKeywordsTable),
+  }),
+);
+
+export const autoTagKeywordsTable = sqliteTable(
+  "auto_tag_keywords",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("atk").toString()),
+    autoTagId: text()
+      .notNull()
+      .references(() => autoTagsForNpmPackagesTable.id, {
+        onDelete: "cascade",
+      }),
+    keyword: text().notNull(),
+  },
+  (t) => ({
+    uniq: unique().on(t.autoTagId, t.keyword),
+    autoTagIdIdx: index("auto_tag_keyword_auto_tagId_idx").on(t.autoTagId),
+    keywordIdx: index("auto_tag_keyword_auto_keyword_idx").on(t.keyword),
+  }),
+);
+
+export const autoTagKeywordsRelation = relations(
+  autoTagKeywordsTable,
+  ({ one }) => ({
+    autoTag: one(autoTagsForNpmPackagesTable, {
+      fields: [autoTagKeywordsTable.autoTagId],
+      references: [autoTagsForNpmPackagesTable.id],
     }),
   }),
 );
