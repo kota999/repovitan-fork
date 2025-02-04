@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "~/db";
 import { CreateAutoTagKeywordForm } from "./create-auto-tag-keyword-form";
+import { AutoTaggingKeywordItem } from "./auto-tagging-keyword-item";
 
 export default async function AutoTagPage({
   params,
@@ -27,8 +28,10 @@ export default async function AutoTagPage({
       <CreateAutoTagKeywordForm autoTagId={autoTaggingId} />
       <div>keywords</div>
       <ul className="list-inside list-disc">
-        {autoTag.keyword.map(({ keyword }) => (
-          <li key={keyword}>{keyword}</li>
+        {autoTag.keyword.map(({ id, keyword }) => (
+          <li key={id}>
+            <AutoTaggingKeywordItem id={id} keyword={keyword} />
+          </li>
         ))}
       </ul>
     </div>

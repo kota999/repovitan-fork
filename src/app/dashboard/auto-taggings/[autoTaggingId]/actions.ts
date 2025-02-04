@@ -7,8 +7,10 @@ import { actionClient } from "~/lib/safe-action";
 import {
   bindCreateAutoTagKeywordArgsSchemas,
   createAutoTagKeywordSchema,
+  deleteAutoTagKeywordSchema,
 } from "./validation";
 import { autoTagKeywordsTable } from "~/db/schema";
+import { eq } from "drizzle-orm";
 
 async function createAutoTagKeyword({
   keyword,
@@ -46,3 +48,30 @@ export const createAutoTagKeywordAction = actionClient
       successful: true,
     };
   });
+
+async function deleteAutoTagKeyword({ keywordId }: { keywordId: string }) {
+  await db
+    .delete(autoTagKeywordsTable)
+    .where(eq(autoTagKeywordsTable.id, keywordId));
+}
+
+export const deleteAutoTagKeywordAction = async (keywordId: string) => {
+  const parsedInput = deleteAutoTagKeywordSchema.safeParse({
+    keywordId: keywordId,
+  });
+  if (parsedInput.error) {
+    return {
+      success: false,
+    };
+  }
+
+  await deleteAutoTagKeyword({
+    keywordId: keywordId,
+  });
+
+  revalidatePath("/dashboard/auto-taggings");
+
+  return {
+    successful: true,
+  };
+};
