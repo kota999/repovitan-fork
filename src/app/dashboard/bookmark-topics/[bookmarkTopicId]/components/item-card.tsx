@@ -3,16 +3,10 @@
 import type { UniqueIdentifier } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-} from "~/components/ui/card";
+import { Card, CardContent, CardDescription } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { cva } from "class-variance-authority";
 import { GripVertical } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ItemTypeBookmark = "bookmark";
@@ -87,7 +81,75 @@ export function ItemCard({ item, isOverlay }: ItemCardProps) {
       },
     },
   });
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={variants({
+        dragging: isOverlay ? "overlay" : isDragging ? "over" : undefined,
+      })}
+    >
+      <div className="space-between relative flex flex-row">
+        <Button
+          variant={"ghost"}
+          {...attributes}
+          {...listeners}
+          className="h-auto cursor-grab px-2 py-0.5 text-secondary-foreground/50"
+        >
+          <span className="sr-only">Move item</span>
+          <GripVertical />
+        </Button>
+        {item.type === "bookmark" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.content.imageUrl}
+            alt="avatar"
+            key={item.id}
+            width="128"
+            height="64"
+          />
+        ) : (
+          ""
+        )}
+        <div className="flex flex-col">
+          <CardContent className="p-0 text-left">
+            <div className="space-between relative flex flex-row px-0.5 py-0.5">
+              {item.type === "bookmark" ? (
+                <Button
+                  variant="ghost"
+                  className="h-auto w-full justify-start whitespace-pre-wrap px-1 py-1"
+                >
+                  <a
+                    href={`/dashboard/bookmarks/${item.id}`}
+                    className="text-left"
+                  >
+                    <p className="text-xs">{item.content.title}</p>
+                  </a>
+                </Button>
+              ) : (
+                <div className="h-auto w-full justify-start whitespace-pre-wrap px-1 py-1">
+                  <div className="text-xs">{item.content.content}</div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <CardDescription className="mt-auto flex gap-1 px-3 pb-0.5">
+            <span>{item.type}</span>
+            {
+              item.type === "bookmark"
+                ? item.content.bookmarksToTags.map(({ tag: { id, name } }) => (
+                    <span key={id}>#{name}</span>
+                  )) // bookmark
+                : "" // memo
+            }
+          </CardDescription>
+        </div>
+      </div>
+    </Card>
+  );
 
+  /*
+  TODO: 暫定デザイン。カードをもっと小さくできるように、レイアウトを圧縮したい
   return (
     <Card
       ref={setNodeRef}
@@ -129,7 +191,6 @@ export function ItemCard({ item, isOverlay }: ItemCardProps) {
           </Badge>
         </div>
       </CardHeader>
-      {/* TODO: 暫定デザイン。カードをもっと小さくできるように、レイアウトを圧縮したい */}
       <CardContent className="p-0 text-left">
         {item.type === "bookmark" ? (
           <Button
@@ -138,8 +199,10 @@ export function ItemCard({ item, isOverlay }: ItemCardProps) {
           >
             <a href={`/dashboard/bookmarks/${item.id}`}>
               <div className="flex flex-row gap-2">
-                {/* TODO: 画像のサイズは適当なのでいい感じにする */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {// TODO: 画像のサイズは適当なのでいい感じにする
+                }
+                {// eslint-disable-next-line @next/next/no-img-element
+                }
                 <img
                   src={item.content.imageUrl}
                   alt="avatar"
@@ -168,4 +231,5 @@ export function ItemCard({ item, isOverlay }: ItemCardProps) {
       </CardDescription>
     </Card>
   );
+  */
 }
