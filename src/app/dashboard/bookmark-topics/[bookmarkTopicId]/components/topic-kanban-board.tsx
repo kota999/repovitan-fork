@@ -24,6 +24,8 @@ import type { Quadrant } from "./board-quadrant";
 import { hasDraggableData } from "./utils";
 import { coordinateGetter } from "./multipleContainersKeyboardPreset";
 import { saveQuadrantItemsAction } from "../actions";
+import { Switch } from "~/components/ui/switch";
+import { Label } from "~/components/ui/label";
 
 const defaultDndId = "kanban";
 
@@ -51,32 +53,36 @@ const SystemQuadrants: Quadrant[] = [
 
 export function TopicKanbanBoard({
   topicId,
+  topicName,
   initialQuadrants,
   initialItems,
   quadrantArrangement,
   id = defaultDndId,
 }: {
   topicId: string;
+  topicName: string;
   initialQuadrants: Quadrant[];
   initialItems: Item[];
   quadrantArrangement: QuadrantArrangement;
   id?: string;
 }) {
-  const makeQuadrants = [...initialQuadrants, ...SystemQuadrants];
+  const [isHorizontal, setIsHorizontal] = useState<boolean>(false);
+  const [hiddenInboxAndMemo, setHiddenInboxAndMemo] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+
+  const makeQuadrants = hiddenInboxAndMemo
+    ? [...initialQuadrants]
+    : [...initialQuadrants, ...SystemQuadrants];
   const [quadrants, setQuadrants] = useState<Quadrant[]>(makeQuadrants);
-  const pickedUpItemQuadrant = useRef<string | null>(null);
   const quadrantsId = useMemo(
     () => quadrants.map((quadrant) => quadrant.id),
     [quadrants],
   );
+  const pickedUpItemQuadrant = useRef<string | null>(null);
 
   const [items, setItems] = useState<Item[]>(initialItems);
-
   const [activeQuadrant, setActiveQuadrant] = useState<Quadrant | null>(null);
-
   const [activeItem, setActiveItem] = useState<Item | null>(null);
-
-  const [mounted, setMounted] = useState(false);
 
   const sensors = useSensors(
     useSensor(MouseSensor),
@@ -216,13 +222,14 @@ export function TopicKanbanBoard({
       return `Dragging ${active.data.current?.type} cancelled.`;
     },
   };
+
   const boardQuadrantArrangement =
     quadrantArrangement === QuadrantArrangementLiteral.HORIZONTAL
       ? "flex flex-row"
       : quadrantArrangement === QuadrantArrangementLiteral.VERTICAL
         ? "flex flex-col w-full h-full"
         : quadrantArrangement === QuadrantArrangementLiteral.GRID2x2
-          ? "grid grid-cols-2 w-full h-full"
+          ? "grid grid-cols-2 h-full w-full" // TODO: GridのCardのサイズが動的になってしまう。1/2 x 1/2のパネル状に固定したい。
           : "flex flex-row";
   const quadrantGridRatio =
     quadrantArrangement === QuadrantArrangementLiteral.HORIZONTAL
@@ -234,69 +241,106 @@ export function TopicKanbanBoard({
           : "hfull_w1/4";
 
   return (
-    <DndContext
-      accessibility={{
-        announcements,
-      }}
-      sensors={sensors}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onDragOver={onDragOver}
-      id={id}
-    >
-      <BoardContainer>
-        <SortableContext items={quadrantsId}>
-          <div className="flex flex-col gap-2">
-            <div className={`${boardQuadrantArrangement} gap-2`}>
-              {quadrants.map((quadrant) => (
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <div className="space-between relative flex flex-row gap-2">
+        <div className="text-xl font-bold">{topicName}</div>
+        <div className="ml-auto flex flex-row space-x-2">
+          <div className="flex items-center gap-1">
+            <Switch
+              id="is-horizontal"
+              defaultChecked={isHorizontal}
+              onCheckedChange={(checked) => setIsHorizontal(checked)}
+            />
+            <Label htmlFor="is-horizontal">Horizontal</Label>
+          </div>
+          <div className="flex items-center gap-1">
+            <Switch
+              id="hidden-inbox-and-memo"
+              defaultChecked={hiddenInboxAndMemo}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setQuadrants(
+                    quadrants.filter(
+                      (quadrant) =>
+                        !SystemQuadrants.map((q) => q.id).includes(quadrant.id),
+                    ),
+                  );
+                } else {
+                  setQuadrants([...quadrants, ...SystemQuadrants]);
+                }
+                setHiddenInboxAndMemo(checked);
+              }}
+            />
+            <Label htmlFor="hidden-inbox-and-memo">Hidden Inbox and Memo</Label>
+          </div>
+        </div>
+      </div>
+      <DndContext
+        accessibility={{
+          announcements,
+        }}
+        sensors={sensors}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
+        id={id}
+      >
+        <BoardContainer>
+          <SortableContext items={quadrantsId}>
+            <div className="flex flex-col gap-2">
+              <div className={`${boardQuadrantArrangement} gap-2`}>
+                {quadrants.map((quadrant) => (
+                  <BoardQuadrant
+                    key={quadrant.id}
+                    topicId={topicId}
+                    quadrant={quadrant}
+                    quadrantGridRatio={quadrantGridRatio}
+                    cardOrientation={isHorizontal ? "horizontal" : "vertical"}
+                    items={items.filter(
+                      (item) =>
+                        //普通の象限に属するアイテム
+                        item.quadrantId === quadrant.id ||
+                        //普通の象限に属しないアイテム
+                        (!quadrants
+                          .slice(0, -SystemQuadrants.length)
+                          .find((q) => q.id === item.quadrantId) &&
+                          ((item.type === "bookmark" &&
+                            quadrant.id === InboxQuadrantInfo.id) || // BookmarkはInboxの象限
+                            (item.type === "memo" &&
+                              quadrant.id === MemoQuadrantInfo.id))), // MemoはMemoの象限
+                    )}
+                    updateQuadrantTitleState={updateQuadrantTitle}
+                    addMemoState={addMemoState}
+                  />
+                ))}
+              </div>
+            </div>
+          </SortableContext>
+        </BoardContainer>
+
+        {mounted &&
+          "document" in window &&
+          createPortal(
+            <DragOverlay>
+              {activeQuadrant && (
                 <BoardQuadrant
-                  key={quadrant.id}
+                  isOverlay
                   topicId={topicId}
-                  quadrant={quadrant}
-                  quadrantGridRatio={quadrantGridRatio}
+                  quadrant={activeQuadrant}
                   items={items.filter(
-                    (item) =>
-                      //普通の象限に属するアイテム
-                      item.quadrantId === quadrant.id ||
-                      //普通の象限に属しないアイテム
-                      (!quadrants
-                        .slice(0, -SystemQuadrants.length)
-                        .find((q) => q.id === item.quadrantId) &&
-                        ((item.type === "bookmark" &&
-                          quadrant.id === InboxQuadrantInfo.id) || // BookmarkはInboxの象限
-                          (item.type === "memo" &&
-                            quadrant.id === MemoQuadrantInfo.id))), // MemoはMemoの象限
+                    (item) => item.quadrantId === activeQuadrant.id,
                   )}
                   updateQuadrantTitleState={updateQuadrantTitle}
                   addMemoState={addMemoState}
+                  cardOrientation={isHorizontal ? "horizontal" : "vertical"}
                 />
-              ))}
-            </div>
-          </div>
-        </SortableContext>
-      </BoardContainer>
-
-      {mounted &&
-        "document" in window &&
-        createPortal(
-          <DragOverlay>
-            {activeQuadrant && (
-              <BoardQuadrant
-                isOverlay
-                topicId={topicId}
-                quadrant={activeQuadrant}
-                items={items.filter(
-                  (item) => item.quadrantId === activeQuadrant.id,
-                )}
-                updateQuadrantTitleState={updateQuadrantTitle}
-                addMemoState={addMemoState}
-              />
-            )}
-            {activeItem && <ItemCard item={activeItem} isOverlay />}
-          </DragOverlay>,
-          document.body,
-        )}
-    </DndContext>
+              )}
+              {activeItem && <ItemCard item={activeItem} isOverlay />}
+            </DragOverlay>,
+            document.body,
+          )}
+      </DndContext>
+    </div>
   );
 
   function onDragStart(event: DragStartEvent) {

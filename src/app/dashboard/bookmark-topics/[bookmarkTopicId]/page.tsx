@@ -125,14 +125,12 @@ export default async function BookmarkTopicPage({
   const initialItems = [...registeredItems, ...inboxItems, ...memoItems];
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="text-xl font-bold">{bookmarkTopic.name}</div>
-      <TopicKanbanBoard
-        topicId={bookmarkTopic.id}
-        initialQuadrants={initialQuadrants}
-        initialItems={initialItems}
-        quadrantArrangement={initialQuadrantArrangement}
-      />
-    </div>
+    <TopicKanbanBoard
+      topicId={bookmarkTopic.id}
+      topicName={bookmarkTopic.name}
+      initialQuadrants={initialQuadrants}
+      initialItems={initialItems}
+      quadrantArrangement={initialQuadrantArrangement}
+    />
   );
 }

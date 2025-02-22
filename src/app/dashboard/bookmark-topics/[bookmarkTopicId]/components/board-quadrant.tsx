@@ -35,6 +35,7 @@ interface BoardQuadrantProps {
   items: Item[];
   quadrantGridRatio?: "hfull_w1/4" | "h1/2_wfull" | "h1/2_w1/2";
   isOverlay?: boolean;
+  cardOrientation?: "vertical" | "horizontal";
   updateQuadrantTitleState: (quadrantId: string, title: string) => void;
   addMemoState: (topicId: string, memo: string) => void;
 }
@@ -45,6 +46,7 @@ export function BoardQuadrant({
   items,
   quadrantGridRatio = "hfull_w1/4",
   isOverlay,
+  cardOrientation = "vertical",
   updateQuadrantTitleState,
   addMemoState,
 }: BoardQuadrantProps) {
@@ -89,7 +91,7 @@ export function BoardQuadrant({
   // TODO: 現在は完全にPC用レイアウト。
   const hxw =
     quadrantGridRatio === "hfull_w1/4"
-      ? "h-[620px] w-1/4"
+      ? "h-[620px] w-1/2"
       : quadrantGridRatio === "h1/2_wfull"
         ? "h-[310px] w-full"
         : quadrantGridRatio === "h1/2_w1/2"
@@ -158,13 +160,22 @@ export function BoardQuadrant({
         </div>
       </CardHeader>
       <ScrollArea>
-        <CardContent className="flex flex-grow flex-col gap-2 p-2">
+        <CardContent
+          className={`flex flex-grow ${cardOrientation === "vertical" ? "flex-col" : "flex-row"} gap-2 p-2`}
+        >
           <SortableContext items={viewItemsIds}>
             {viewItems.map((item) => (
-              <ItemCard key={item.id} item={item} />
+              <ItemCard
+                key={item.id}
+                item={item}
+                direction={
+                  cardOrientation === "vertical" ? "horizontal" : "vertical"
+                }
+              />
             ))}
           </SortableContext>
         </CardContent>
+        <ScrollBar orientation={cardOrientation} />
       </ScrollArea>
     </Card>
   );
