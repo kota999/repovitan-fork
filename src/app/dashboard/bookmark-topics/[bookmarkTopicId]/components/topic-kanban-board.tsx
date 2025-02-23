@@ -229,7 +229,7 @@ export function TopicKanbanBoard({
       : quadrantArrangement === QuadrantArrangementLiteral.VERTICAL
         ? "flex flex-col w-full h-full"
         : quadrantArrangement === QuadrantArrangementLiteral.GRID2x2
-          ? "grid grid-cols-2 h-full w-full" // TODO: GridのCardのサイズが動的になってしまう。1/2 x 1/2のパネル状に固定したい。
+          ? "h-full w-full grid grid-cols-2"
           : "flex flex-row";
   const quadrantGridRatio =
     quadrantArrangement === QuadrantArrangementLiteral.HORIZONTAL
