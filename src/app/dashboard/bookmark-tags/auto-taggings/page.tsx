@@ -31,7 +31,9 @@ export default async function AutoTagsPage() {
         <ul className="list-inside list-disc">
           {autoTags.map(({ id, tag: { name } }) => (
             <li key={id}>
-              <Link href={`/dashboard/auto-taggings/${id}`}>{name}</Link>
+              <Link href={`/dashboard/bookmark-tags/auto-taggings/${id}`}>
+                {name}
+              </Link>
             </li>
           ))}
         </ul>

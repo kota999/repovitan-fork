@@ -209,10 +209,27 @@ export const createNodejsProjectAction = authActionClient
         },
       );
       const npmPackages = Object.keys({ ...dependencies, ...devDependencies });
-
-      if (!npmPackages.includes("next")) {
-        throw new Error("Next.js project required");
+      const requirePackageForNodejs =
+        await db.query.nodejsProjectRequirePackageTable.findMany({
+          where: (nodejsProjectRequirePackageTable, { eq }) =>
+            eq(nodejsProjectRequirePackageTable.userId, userId),
+        });
+      const requireCheckPackages =
+        requirePackageForNodejs.length > 0
+          ? requirePackageForNodejs
+          : [{ packageName: "next" }];
+      const checkResult = requireCheckPackages.map(({ packageName }) =>
+        npmPackages.includes(packageName),
+      );
+      if (!checkResult.includes(true)) {
+        throw new Error(
+          `Node.js project required, ${requireCheckPackages.map(({ packageName }) => packageName).join(" or ")}`,
+        );
       }
+
+      //if (!npmPackages.includes("next")) {
+      //  throw new Error("Next.js project required");
+      //}
 
       await db.transaction(async (tx) => {
         await tx

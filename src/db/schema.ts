@@ -519,6 +519,22 @@ export const nodejsProjectsToNpmPackagesRelations = relations(
   }),
 );
 
+export const nodejsProjectRequirePackageTable = sqliteTable(
+  "nodejs_project_require_package",
+  {
+    id: text()
+      .primaryKey()
+      .$defaultFn(() => typeid("njprp").toString()),
+    userId: text()
+      .notNull()
+      .references(() => usersTable.id, { onDelete: "cascade" }),
+    packageName: text().notNull(),
+  },
+  (t) => ({
+    userIdIdx: index("nodejs_project_require_package_userId_idx").on(t.userId),
+  }),
+);
+
 export const autoTagsForNpmPackagesTable = sqliteTable(
   "auto_tags_for_npm_packages",
   {

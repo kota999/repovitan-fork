@@ -38,6 +38,13 @@ const data = {
       title: "Bookmarks",
       url: "/dashboard/bookmarks",
       icon: BookmarkIcon,
+      isActive: false,
+      items: [
+        {
+          title: "Node.js Require Package",
+          url: "/dashboard/bookmarks/nodejs-require",
+        },
+      ],
     },
     {
       title: "Bookmark Topics",
@@ -57,7 +64,7 @@ const data = {
       items: [
         {
           title: "Auto Tagging",
-          url: "/dashboard/auto-taggings",
+          url: "/dashboard/bookmark-tags/auto-taggings",
         },
       ],
     },
