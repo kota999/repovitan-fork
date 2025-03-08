@@ -144,14 +144,16 @@ export const createNodejsProjectAction = authActionClient
   .bindArgsSchemas(bindGithubUrlSchemas)
   .action(
     async ({ ctx: { userId }, bindArgsParsedInputs: [bookmarkId, url] }) => {
+      const githubUrl = "https://github.com";
       const { origin, pathname } = new URL(url);
-      if (origin !== "https://github.com") {
+      if (origin !== githubUrl) {
         throw new Error("Invalid URL");
       }
       const [owner, repo] = pathname.split("/").filter(Boolean);
       if (!owner || !repo) {
         throw new Error("Invalid URL");
       }
+      const [, reposPath] = pathname.split(`${owner}/${repo}`).filter(Boolean);
 
       const client = await clerkClient();
       const { data: tokens } = await client.users.getUserOauthAccessToken(
@@ -184,10 +186,15 @@ export const createNodejsProjectAction = authActionClient
       // });
       // console.log(items);
 
+      // /blob/{brach}/path/to/package.json の場合、package.jsonのパスを取得
+      const packageJsonPath = reposPath?.match(/^\/blob\/.*\/package.json$/)
+        ? `/${reposPath.split("/").slice(3).join("/")}`
+        : "package.json";
+
       const { data: contentData } = await octokit.repos.getContent({
         owner,
         repo,
-        path: "package.json",
+        path: packageJsonPath,
       });
       if (
         Array.isArray(contentData) ||
@@ -249,7 +256,10 @@ export const createNodejsProjectAction = authActionClient
         // isExisting nodejs project ?
         const nodejsProject = await tx.query.nodejsProjectsTable.findFirst({
           where: (nodejsProjectsTable, { eq }) =>
-            eq(nodejsProjectsTable.repoId, repoId),
+            and(
+              eq(nodejsProjectsTable.repoId, repoId),
+              eq(nodejsProjectsTable.path, path),
+            ),
         });
         const createNodejsProject = async () => {
           const [{ id: projectId }] = (await tx

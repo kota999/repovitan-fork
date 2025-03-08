@@ -27,6 +27,7 @@ export default async function NpmPackagePage({
     notFound();
   }
 
+  console.log(npmPackage.projectsToPackages);
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <h1>{npmPackage.name}</h1>
@@ -35,7 +36,9 @@ export default async function NpmPackagePage({
           <li key={project.id}>
             <h2>
               <Link href={project.htmlUrl} target="_blank">
-                {project.repo.fullName}
+                {project.path === "package.json"
+                  ? project.repo.fullName
+                  : `${project.repo.fullName}/${project.path}`}
               </Link>
             </h2>
           </li>
