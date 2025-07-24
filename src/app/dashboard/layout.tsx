@@ -7,13 +7,20 @@ import {
   SidebarTrigger,
 } from "~/components/ui/sidebar";
 
-export default function AppLayout({
+import { currentUser } from "@clerk/nextjs/server";
+import { createUser } from "~/db/mutation";
+
+export default async function AppLayout({
   children,
   breadcrumbs,
 }: Readonly<{
   children: React.ReactNode;
   breadcrumbs: React.ReactNode;
 }>) {
+  const user = await currentUser();
+  if (user) {
+    await createUser(user.id, user.username ?? "");
+  }
   return (
     <SidebarProvider>
       <ClerkProvider>

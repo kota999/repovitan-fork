@@ -90,7 +90,7 @@ export const EditableTitle = ({
     </Form>
   ) : (
     <h1
-      className="text-4xl font-medium"
+      className="text-3xl font-medium"
       ref={h1Ref}
       onClick={() => {
         flushSync(() => {
