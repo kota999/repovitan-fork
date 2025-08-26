@@ -47,6 +47,7 @@ interface ItemCardProps {
   item: Item;
   isOverlay?: boolean;
   direction?: "vertical" | "horizontal";
+  share?: boolean;
 }
 
 export type ItemDropableType = "Item";
@@ -60,6 +61,7 @@ export function ItemCard({
   item,
   isOverlay,
   direction = "horizontal",
+  share = false,
 }: ItemCardProps) {
   const {
     setNodeRef,
@@ -109,7 +111,11 @@ export function ItemCard({
         ) : (
           <CardHeader className="border-b-2 border-secondary p-0">
             <div className="space-between relative flex flex-row px-0.5 py-0.5">
-              {getGripButton(attributes, listeners)}
+              {share ? (
+                <div className="w-1"></div>
+              ) : (
+                getGripButton(attributes, listeners)
+              )}
               <span className="line-clamp-1 text-xs">
                 {item.type === "bookmark" ? item.content.title : "memo"}
               </span>
@@ -121,7 +127,11 @@ export function ItemCard({
         /* content & footer */
         direction === "horizontal" ? (
           <div className="space-between relative flex flex-row">
-            {getGripButton(attributes, listeners)}
+            {share ? (
+              <div className="w-1"></div>
+            ) : (
+              getGripButton(attributes, listeners)
+            )}
             {item.type === "bookmark" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

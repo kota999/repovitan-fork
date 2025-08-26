@@ -38,6 +38,7 @@ interface BoardQuadrantProps {
   cardOrientation?: "vertical" | "horizontal";
   updateQuadrantTitleState: (quadrantId: string, title: string) => void;
   addMemoState: (topicId: string, memo: string) => void;
+  share?: boolean;
 }
 
 export function BoardQuadrant({
@@ -49,6 +50,7 @@ export function BoardQuadrant({
   cardOrientation = "vertical",
   updateQuadrantTitleState,
   addMemoState,
+  share = false,
 }: BoardQuadrantProps) {
   // filterKeywordはInboxのみで設定する
   const [itemFilterKeyword, setItemFilterKeyword] = useState("");
@@ -146,17 +148,27 @@ export function BoardQuadrant({
         )}
         {quadrant.id === MemoQuadrantInfo.id ? (
           <>
-            <AddMemoDialog topicId={topicId} addMemoState={addMemoState} />
+            <AddMemoDialog
+              topicId={topicId}
+              addMemoState={addMemoState}
+              share={share}
+            />
           </>
         ) : (
           ""
         )}
         <div className="ml-auto p-1">
-          <EditableTitle
-            quadrantId={quadrant.id as string}
-            title={quadrant.title}
-            updateQuadrantTitleState={updateQuadrantTitleState}
-          />
+          {share ? (
+            <div className="w-full">
+              <h1 className="text-xl font-medium">{quadrant.title}</h1>
+            </div>
+          ) : (
+            <EditableTitle
+              quadrantId={quadrant.id as string}
+              title={quadrant.title}
+              updateQuadrantTitleState={updateQuadrantTitleState}
+            />
+          )}
         </div>
       </CardHeader>
       <ScrollArea>
@@ -171,6 +183,7 @@ export function BoardQuadrant({
                 direction={
                   cardOrientation === "vertical" ? "horizontal" : "vertical"
                 }
+                share={share}
               />
             ))}
           </SortableContext>

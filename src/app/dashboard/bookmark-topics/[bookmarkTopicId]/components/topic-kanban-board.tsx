@@ -58,6 +58,7 @@ export function TopicKanbanBoard({
   initialItems,
   quadrantArrangement,
   id = defaultDndId,
+  share = false,
 }: {
   topicId: string;
   topicName: string;
@@ -65,6 +66,7 @@ export function TopicKanbanBoard({
   initialItems: Item[];
   quadrantArrangement: QuadrantArrangement;
   id?: string;
+  share?: boolean;
 }) {
   const [isHorizontal, setIsHorizontal] = useState<boolean>(false);
   const [hiddenInboxAndMemo, setHiddenInboxAndMemo] = useState<boolean>(false);
@@ -311,6 +313,7 @@ export function TopicKanbanBoard({
                     )}
                     updateQuadrantTitleState={updateQuadrantTitle}
                     addMemoState={addMemoState}
+                    share={share}
                   />
                 ))}
               </div>
