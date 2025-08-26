@@ -38,9 +38,14 @@ const FormSchema = z.object({
 interface DialogProps {
   topicId: string;
   addMemoState: (topicId: string, memo: string) => void;
+  share?: boolean;
 }
 
-export function AddMemoDialog({ topicId, addMemoState }: DialogProps) {
+export function AddMemoDialog({
+  topicId,
+  addMemoState,
+  share = false,
+}: DialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -64,13 +69,15 @@ export function AddMemoDialog({ topicId, addMemoState }: DialogProps) {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-auto px-2 text-justify text-primary/100"
-        >
-          <SquarePlus />
-          Add Memo
-        </Button>
+        {!share && (
+          <Button
+            variant="outline"
+            className="w-auto px-2 text-justify text-primary/100"
+          >
+            <SquarePlus />
+            Add Memo
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogTitle>Add Memo</DialogTitle>
