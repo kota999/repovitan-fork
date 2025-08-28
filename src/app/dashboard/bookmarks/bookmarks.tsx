@@ -35,7 +35,10 @@ export default async function BookmarksPage({
           <li key={id}>
             <MinimalCard className="2xl:w-96">
               {/* TODO: dummy image for imageUrl is null */}
-              <MinimalCardImage src={imageUrl ?? ""} alt={title ?? ""} />
+              <MinimalCardImage
+                src={imageUrl ?? "/xmark-solid-full.svg"}
+                alt={title ?? ""}
+              />
               <MinimalCardTitle className="line-clamp-3">
                 {!share ? (
                   <Link href={`/dashboard/bookmarks/${id}`}>{title}</Link>

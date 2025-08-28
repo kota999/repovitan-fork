@@ -135,7 +135,11 @@ export function ItemCard({
             {item.type === "bookmark" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={item.content.imageUrl}
+                src={
+                  item.content.imageUrl.length > 0
+                    ? item.content.imageUrl
+                    : "/xmark-solid-full.svg"
+                }
                 alt="avatar"
                 key={item.id}
                 className="h-20"
@@ -175,7 +179,11 @@ export function ItemCard({
                 <div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.content.imageUrl}
+                    src={
+                      item.content.imageUrl.length > 0
+                        ? item.content.imageUrl
+                        : "/xmark-solid-full.svg"
+                    }
                     alt="avatar"
                     key={item.id}
                     className="w-full"

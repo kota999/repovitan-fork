@@ -54,7 +54,7 @@ export default async function BookmarkPage({
         {bookmark.link.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={bookmark.link.imageUrl}
+            src={bookmark.link.imageUrl ?? "/xmark-solid-full.svg"}
             alt={bookmark.link.title ?? ""}
             className="w-full max-w-lg rounded-lg border"
           />
